@@ -3,4 +3,10 @@ name = "rush"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "rush"
+path = "src/rush.rs"
+
 [dependencies]
+nom = "7"
+
