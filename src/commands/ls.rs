@@ -1,6 +1,6 @@
-use crate::architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError};
+use crate::architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, params::Params};
 
-struct Ls {
+pub(crate) struct Ls {
     
 }
 
@@ -34,33 +34,32 @@ impl Command for Ls {
     }
 
     fn req_arguments(&self) -> Vec<Argument> {
-        vec![
-            Argument {
-                name: "target",
-                description: "Path to directory",
-                arg_type: vec![
-                    ShellType::DirPath,
-                    ShellType::GlobPath,
-                ],       
-            }
-        ]
+        vec![]
     }
 
-    fn other_arguments(&self) -> Option<Vec<Argument>> {
-        None
+    fn opt_arguments(&self) -> Vec<Argument> {
+        vec![]
     }
 
-    fn subcommand(&self) -> Option<Vec<Box<dyn Command>>> {
-        None
+    fn list_argument(&self) -> Option<Argument> {
+        Some(Argument {
+            name: "target",
+            description: "Path to directory",
+            arg_type: vec![
+                ShellType::DirPath,
+                ShellType::GlobPath,
+            ],       
+        })
     }
 
     fn run(&self, params: Params) -> Result<ShellResult, ShellError> {
         let is_all = params.options.iter().any(|(n, _)| *n=="all");
         let is_long = params.options.iter().any(|(n, _)| *n=="long");
 
-        let target_dir = params.required_arguments.iter().find(|(n, _)| *n=="target");
+        let target_dir = params.req_arguments.iter().find(|a| **a=="target");
 
         todo!()
     }
+
 }
 

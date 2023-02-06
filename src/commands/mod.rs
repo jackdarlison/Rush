@@ -1,1 +1,2 @@
-mod ls;
+pub mod ls;
+pub mod echo;

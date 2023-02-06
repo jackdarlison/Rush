@@ -1,4 +1,3 @@
-
 pub enum ShellType {
     Any,
     FilePath,
@@ -6,5 +5,6 @@ pub enum ShellType {
     GlobPath,
     String,
     Number,
+    Float,
     Int,
 }
