@@ -1,8 +1,7 @@
 use crate::architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, params::Params};
 
-pub(crate) struct Ls {
-    
-}
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct Ls {}
 
 impl Command for Ls {
 
@@ -33,16 +32,16 @@ impl Command for Ls {
         ]
     }
 
-    fn req_arguments(&self) -> Vec<Argument> {
+    fn req_arguments(&self) -> Vec<CommandArgument> {
         vec![]
     }
 
-    fn opt_arguments(&self) -> Vec<Argument> {
+    fn opt_arguments(&self) -> Vec<CommandArgument> {
         vec![]
     }
 
-    fn list_argument(&self) -> Option<Argument> {
-        Some(Argument {
+    fn list_argument(&self) -> Option<CommandArgument> {
+        Some(CommandArgument {
             name: "target",
             description: "Path to directory",
             arg_type: vec![

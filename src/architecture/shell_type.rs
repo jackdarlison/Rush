@@ -1,3 +1,5 @@
+
+#[derive(Debug, Clone)]
 pub enum ShellType {
     Any,
     FilePath,

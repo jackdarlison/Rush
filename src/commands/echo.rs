@@ -2,6 +2,7 @@
 
 use crate::architecture::{command::*, shell_error::ShellError, shell_type::ShellType, shell_result::ShellResult, params::Params};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Echo {}
 
 impl Command for Echo {
@@ -26,16 +27,16 @@ impl Command for Echo {
         ]
     }
 
-    fn req_arguments(&self) -> Vec<Argument> {
+    fn req_arguments(&self) -> Vec<CommandArgument> {
         vec![]
     }
 
-    fn opt_arguments(&self) -> Vec<Argument> {
+    fn opt_arguments(&self) -> Vec<CommandArgument> {
         vec![]
     }
 
-    fn list_argument(&self) -> Option<Argument> {
-        Some(Argument {
+    fn list_argument(&self) -> Option<CommandArgument> {
+        Some(CommandArgument {
             name: "args",
             description: "The list of arguments to print out",
             arg_type: vec![ShellType::Any],

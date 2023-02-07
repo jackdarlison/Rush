@@ -1,4 +1,4 @@
-use super::shell_data::ShellData;
+use super::{shell_data::ShellData, command::Command, params::Params};
 
 
 pub(crate) struct AstProgram {
@@ -8,8 +8,14 @@ pub(crate) struct AstProgram {
 }
 
 pub(crate) struct AstCommand {
-    name: String,
+    name: &'static str,
     options: Vec<(String, ShellData)>,
     arguments: Vec<ShellData>,
+    // params: Params,
+}
+
+pub(crate) struct AstUnknown {
+    name: &'static str,
+    params: Vec<&'static str>,
 }
 
