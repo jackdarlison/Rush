@@ -9,4 +9,5 @@ path = "src/rush.rs"
 
 [dependencies]
 nom = "7"
+glob = "0.3"
 
