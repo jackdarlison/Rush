@@ -5,7 +5,7 @@ use super::params::Params;
 use core::fmt::Debug;
 
 //trait for built in commands
-pub(crate) trait Command: Debug {
+pub trait Command: Debug {
     fn name(&self) -> &str;
     fn description(&self) -> &str;
     //list of possible options for command
@@ -21,14 +21,16 @@ pub(crate) trait Command: Debug {
 
 }
 
-pub(crate) struct CommandArgument {
+#[derive(Debug)]
+pub struct CommandArgument {
     pub name: &'static str,
     pub description: &'static str,
     //Valid arg types (union)
     pub arg_type: Vec<ShellType>,
 }
 
-pub(crate) struct CommandOption {
+#[derive(Debug)]
+pub struct CommandOption {
     pub name: &'static str,
     pub short_name: Option<char>,
     pub description: &'static str,

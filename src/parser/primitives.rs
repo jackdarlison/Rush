@@ -2,7 +2,7 @@ use nom::{
     IResult, 
     combinator::map,
     branch::alt,
-    character::complete::i32,
+    character::complete::{i32, anychar, one_of},
     number::complete::float, 
 };
 
