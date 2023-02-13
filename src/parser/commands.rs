@@ -45,28 +45,28 @@ fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str,
 
     let opts: Vec<(&str, Option<&str>)> = comp.1.split("").map(|c| (c, None)).collect();
 
-    let valid_short_names: Vec<String> = command_opts.iter().filter_map(|opt| opt.short_name).map(|c| c.to_string()).collect();
-    let valid_long_names: Vec<String> = command_opts.iter().map(|opt| opt.name.to_string()).collect();
-    for p_opt in &opts {
-        if !valid_short_names.contains(&String::from(p_opt.0)) {return Err(Failure(Error::new("Not valid options", ErrorKind::Tag)))}
-    }
-
-    fold_many0(
+    let (rest, parsed_opts) = fold_many0(
         separated_pair(pair(alt((tag("--"), tag("-"))), alpha1), multispace1, opt(alphanumeric1)),
         move || opts.clone(),
-        |mut acc, val | {
-            match val {
-                (("-", name), data) => {
-
-                },
-                (("--", name), data) => {
-
-                },
-                _ => return Err(Failure(Error::new("Invalid Parse", ErrorKind::Tag)))
-            }
+        |mut acc, ((_, name), data) | {
+            //this well break on (non data opt, arg). will parse as (data opt, data)
+            acc.push((name, data));
             acc
         }
-    )(rest)
+    )(rest)?;
+
+    let valid_short_names: Vec<String> = command_opts.iter().filter_map(|opt| opt.short_name).map(|c| c.to_string()).collect();
+    let valid_long_names: Vec<String> = command_opts.iter().map(|opt| opt.name.to_string()).collect();
+
+    // for p_opt in &parsed_opts {
+    //     if !(valid_short_names.contains(&String::from(p_opt.0)) || valid_long_names.contains(&String::from(p_opt.0))) {
+    //         return Err(Failure(Error::new("Not valid option name", ErrorKind::Tag)))
+    //     }
+
+    //     if 
+    // } 
+
+    todo!()
 }
 
 fn parse_arguments(input: String) -> IResult<String, AstCommand> {

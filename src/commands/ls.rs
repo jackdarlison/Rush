@@ -1,5 +1,8 @@
 use crate::architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, params::Params};
 
+extern crate glob;
+use glob::glob;
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Ls {}
 
@@ -55,10 +58,36 @@ impl Command for Ls {
         let is_all = params.options.iter().any(|(n, _)| *n=="all");
         let is_long = params.options.iter().any(|(n, _)| *n=="long");
 
-        let target_dir = params.req_arguments.iter().find(|a| **a=="target");
+        let target_dir = params.req_args.iter().find(|a| **a=="target");
 
+        let mut results: Vec<String> = vec![];
+        for dir in params.arg_list {
+            for entry in glob(&(dir.to_owned() + "/*")).unwrap() {
+                match entry {
+                    Ok(path) => results.push(String::from(path.to_str().unwrap())),
+                    Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
+                }
+            }
+        }
+
+        println!("{:?}", results);
+        //TODO:convert data into list of shell data
         todo!()
     }
 
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ls() {
+
+        let tester = Ls {};
+        tester.run(Params {options: vec![], req_args: vec![], opt_args: vec![], arg_list: vec!["/Users/"]});
+        
+        assert!(1==1)
+    }
+
+}
