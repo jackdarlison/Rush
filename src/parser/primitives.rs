@@ -14,11 +14,11 @@ fn parse_file_path(input: &str) -> IResult<&str, ShellData> {
 }
 
 fn parse_int(input: &str) -> IResult<&str, ShellData> {
-    map(i32, |v| ShellData::Int { value: v })(input)
+    map(i32, |v| ShellData::Int(v))(input)
 }
 
 fn parse_float(input: &str) -> IResult<&str, ShellData> {
-    map(float, |v| ShellData::Float { value: v })(input)
+    map(float, |v| ShellData::Float(v))(input)
 }
 
 fn parse_number(input: &str) -> IResult<&str, ShellData> {
@@ -32,11 +32,11 @@ mod tests {
 
     #[test]
     fn test_int() {
-        assert_eq!(parse_int("5"), Ok(("", ShellData::Int { value: 5 })))
+        assert_eq!(parse_int("5"), Ok(("", ShellData::Int(5))))
     }
 
     #[test]
     fn test_number_float() {
-        assert_eq!(parse_number("5.0"), Ok(("", ShellData::Float { value: 5.0 })))
+        assert_eq!(parse_number("5.0"), Ok(("", ShellData::Float(5.0))))
     }
 }

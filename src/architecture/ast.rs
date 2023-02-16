@@ -9,9 +9,8 @@ pub(crate) struct AstProgram {
 
 pub(crate) struct AstCommand {
     name: &'static str,
-    options: Vec<(String, ShellData)>,
+    options: Vec<(String, Option<ShellData>)>,
     arguments: Vec<ShellData>,
-    // params: Params,
 }
 
 pub(crate) struct AstUnknown {

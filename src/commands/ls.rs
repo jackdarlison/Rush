@@ -46,10 +46,6 @@ impl Command for Ls {
         vec![]
     }
 
-    fn opt_arguments(&self) -> Vec<CommandArgument> {
-        vec![]
-    }
-
     fn list_argument(&self) -> Option<CommandArgument> {
         Some(CommandArgument {
             name: "target",
@@ -73,7 +69,7 @@ impl Command for Ls {
             for entry in glob(&format!("{}/*", dir.to_owned())).unwrap() {
                 println!("{:?}", entry);
                 match entry {
-                    Ok(path) => results.push(ShellData::FilePath{value: String::from(path.to_str().unwrap())}),
+                    Ok(path) => results.push(ShellData::FilePath(String::from(path.to_str().unwrap()))),
                     Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
                 }
             }

@@ -87,12 +87,32 @@ fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, 
     }
 }
 
-fn parse_arguments(input: &str) -> IResult<&str, &str> {
-    todo!()
-}
+fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<&str>> {
+    let required = command.req_arguments();
+    let list = command.list_argument();
 
-fn parse_argument(input: &str) -> IResult<&str, &str> {
-    todo!()
+    let mut rest: &str = input;
+    let mut arguments = vec![];
+
+    for arg in &required {
+        let (next_rest, (argument, _)) = tuple((alpha1, multispace0))(rest)?;
+        arguments.push(argument);
+        rest = next_rest;
+    }
+
+    match list {
+        None => Ok((rest, arguments)),
+        Some(arg) => {
+            fold_many0(
+                tuple((alpha1, multispace0)),
+                move || arguments.clone(),
+                |mut acc, (argument, _)| {
+                    acc.push(argument);
+                    acc
+                }
+            )(rest)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -120,6 +140,11 @@ mod tests {
     #[test]
     fn test_option_parser() {
         println!("{:?}", parse_option("--test hello hello", (Ls {}).options()))
+    }
+
+    #[test]
+    fn test_argument_parser() {
+        println!("{:?}", parse_arguments("hello hello hello", Box::new(Ls {})))
     }
 
 }

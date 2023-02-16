@@ -12,8 +12,6 @@ pub trait Command: Debug {
     fn options(&self) -> Vec<CommandOption>;
     //ordered list of required arguments
     fn req_arguments(&self) -> Vec<CommandArgument>;
-    //list of any non-required arguments
-    fn opt_arguments(&self) -> Vec<CommandArgument>;
     //single argument which can be passed multiple times
     fn list_argument(&self) -> Option<CommandArgument>;
 

@@ -31,10 +31,6 @@ impl Command for Echo {
         vec![]
     }
 
-    fn opt_arguments(&self) -> Vec<CommandArgument> {
-        vec![]
-    }
-
     fn list_argument(&self) -> Option<CommandArgument> {
         Some(CommandArgument {
             name: "args",
