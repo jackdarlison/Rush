@@ -21,7 +21,7 @@ pub trait Command: Debug {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommandArgument {
     pub name: &'static str,
     pub description: &'static str,
@@ -29,12 +29,13 @@ pub struct CommandArgument {
     pub arg_type: Vec<ShellType>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct CommandOption {
     pub name: &'static str,
-    pub short_name: Option<char>,
+    pub short_name: Option<&'static str>,
     pub description: &'static str,
-    pub data: Option<String>,
+    pub data: Option<ShellType>,
     pub required: bool,
 }
+
 

@@ -3,14 +3,14 @@ use nom::{
     IResult,
     branch::alt,
     bytes::complete::tag, 
-    combinator::{map, value, opt}, 
-    character::complete::{alpha1, alphanumeric1, anychar, multispace1}, 
+    combinator::{map, value, opt, peek}, 
+    character::complete::{alpha1, alphanumeric1, anychar, multispace1, multispace0}, 
     multi::{many0, fold_many0}, 
-    sequence::{pair, separated_pair}, 
-    Err::*,
+    sequence::{pair, separated_pair, delimited, tuple}, 
+    Err::{*, self},
     error::{Error, ErrorKind},
 };
-use crate::{architecture::{command::{Command, CommandOption, self}, ast::AstCommand}, commands::{ls::Ls, echo::Echo}, helpers::lookup::{command_lookup}};
+use crate::{architecture::{command::{Command, CommandOption, self}, ast::AstCommand, shell_data::ShellData}, commands::{ls::Ls, echo::Echo}, helpers::lookup::{command_lookup, option_lookup}};
 
 fn parse_valid_command(input: &str) -> IResult<&str, &'static str> {
     alt((
@@ -41,35 +41,57 @@ fn parse_command(input: &str) -> IResult<&str, AstCommand> {
 
 fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, Vec<(&str, Option<&str>)>> {
 
-    let (rest, comp) = pair(tag("-"), alpha1)(input)?;
+    //parse compound options
+    let (rest, compound_opts) = opt(tuple((tag("-"), alpha1, multispace0)))(input)?;
+    let mut opts: Vec<(&str, Option<&str>)> = vec![];
+    match compound_opts {
+        Some((_, flags, _)) => {
+            let mut comp: Vec<(&str, Option<&str>)> = flags.split("").map(|c| (c, None)).filter(|(c, _)| !c.is_empty()).collect();
+            opts.append(&mut comp)
+            
+        },
+        None => {},
+    }
 
-    let opts: Vec<(&str, Option<&str>)> = comp.1.split("").map(|c| (c, None)).collect();
-
-    let (rest, parsed_opts) = fold_many0(
-        separated_pair(pair(alt((tag("--"), tag("-"))), alpha1), multispace1, opt(alphanumeric1)),
+    fold_many0(
+        parse_option_helper(command_opts),
         move || opts.clone(),
-        |mut acc, ((_, name), data) | {
-            //this well break on (non data opt, arg). will parse as (data opt, data)
+        | mut acc, (name, data) | {
             acc.push((name, data));
             acc
         }
-    )(rest)?;
+    )(rest)
 
-    let valid_short_names: Vec<String> = command_opts.iter().filter_map(|opt| opt.short_name).map(|c| c.to_string()).collect();
-    let valid_long_names: Vec<String> = command_opts.iter().map(|opt| opt.name.to_string()).collect();
+}
 
-    // for p_opt in &parsed_opts {
-    //     if !(valid_short_names.contains(&String::from(p_opt.0)) || valid_long_names.contains(&String::from(p_opt.0))) {
-    //         return Err(Failure(Error::new("Not valid option name", ErrorKind::Tag)))
-    //     }
+fn parse_option_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) -> IResult<&str, (&str, Option<&str>)> {
+    move |input| {parse_option(input, command_opts.clone())}
+}
 
-    //     if 
-    // } 
+fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, (&str, Option<&str>)> {
 
+    let (rest, (_, opt_name, _)) = tuple((alt((tag("--"), tag("-"))), alpha1, multispace0))(input)?;
+
+    match option_lookup(&command_opts, opt_name) {
+        Some(option) => {
+            match option.data {
+                Some(_) => {
+                    let (rest2, (data, _)) = tuple((alpha1, multispace0))(rest)?;
+                    Ok((rest2, (opt_name, Some(data))))
+                    
+                },
+                None => Ok((rest, (opt_name, None))),
+            }
+        },
+        None => Err(Failure(Error::new("Not a valid option", ErrorKind::Tag))),
+    }
+}
+
+fn parse_arguments(input: &str) -> IResult<&str, &str> {
     todo!()
 }
 
-fn parse_arguments(input: String) -> IResult<String, AstCommand> {
+fn parse_argument(input: &str) -> IResult<&str, &str> {
     todo!()
 }
 
@@ -88,6 +110,16 @@ mod tests {
         parse_command("ls");
 
         assert!(1 == 1)
+    }
+
+    #[test]
+    fn test_options_parser() {
+        println!("{:?}", parse_options("--test hello hello", (Ls {}).options()))
+    }
+
+    #[test]
+    fn test_option_parser() {
+        println!("{:?}", parse_option("--test hello hello", (Ls {}).options()))
     }
 
 }

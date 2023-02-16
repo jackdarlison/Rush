@@ -1,4 +1,4 @@
-use crate::architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, params::Params};
+use crate::architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, params::Params, shell_data::ShellData};
 
 extern crate glob;
 use glob::glob;
@@ -20,16 +20,23 @@ impl Command for Ls {
         vec![
             CommandOption {
                 name: "all",
-                short_name: Some('a'),
+                short_name: Some("a"),
                 description: "Print hidden files as well",
                 data: None,
                 required: false
             },
             CommandOption {
                 name: "long",
-                short_name: Some('l'),
+                short_name: Some("l"),
                 description: "Print in long format",
                 data: None,
+                required: false
+            },
+            CommandOption {
+                name: "test",
+                short_name: None,
+                description: "Test data options",
+                data: Some(ShellType::Any),
                 required: false
             }
         ]
@@ -60,19 +67,22 @@ impl Command for Ls {
 
         let target_dir = params.req_args.iter().find(|a| **a=="target");
 
-        let mut results: Vec<String> = vec![];
+        let mut results: Vec<ShellData> = vec![];
         for dir in params.arg_list {
-            for entry in glob(&(dir.to_owned() + "/*")).unwrap() {
+            println!("{:?}", &dir);
+            for entry in glob(&format!("{}/*", dir.to_owned())).unwrap() {
+                println!("{:?}", entry);
                 match entry {
-                    Ok(path) => results.push(String::from(path.to_str().unwrap())),
+                    Ok(path) => results.push(ShellData::FilePath{value: String::from(path.to_str().unwrap())}),
                     Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
                 }
             }
         }
 
-        println!("{:?}", results);
-        //TODO:convert data into list of shell data
-        todo!()
+        //TODO: process options, also need to get file information
+
+        Ok(ShellResult::List(results))
+
     }
 
 }
@@ -85,7 +95,8 @@ mod tests {
     fn test_ls() {
 
         let tester = Ls {};
-        tester.run(Params {options: vec![], req_args: vec![], opt_args: vec![], arg_list: vec!["/Users/"]});
+        let res = tester.run(Params {options: vec![], req_args: vec![], opt_args: vec![], arg_list: vec!["/ouce"]});
+        println!("{:?}", res);
         
         assert!(1==1)
     }

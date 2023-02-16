@@ -19,7 +19,7 @@ impl Command for Echo {
         vec![
                 CommandOption {
                     name: "no-newline",
-                    short_name: Some('n'),
+                    short_name: Some("n"),
                     description: "Print without the trailing newline character",
                     data: None,
                     required: false
