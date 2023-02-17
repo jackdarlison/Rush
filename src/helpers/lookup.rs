@@ -1,4 +1,4 @@
-use crate::{architecture::{command::{Command, CommandOption}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls}};
+use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls}};
 
 pub fn command_lookup(command: &str) -> Option<Box<dyn Command>> {
     match command {
@@ -10,6 +10,10 @@ pub fn command_lookup(command: &str) -> Option<Box<dyn Command>> {
 
 pub fn get_command_options(command: &str) -> Option<Vec<CommandOption>> {
     command_lookup(command).and_then(|c| Some(c.options()))
+}
+
+pub fn get_command_arguments(command: &str) -> Option<(Vec<CommandArgument>, Option<CommandArgument>)> {
+    command_lookup(command).and_then(|c| Some((c.req_arguments(), c.list_argument())))
 }
 
 pub fn option_lookup(options: &Vec<CommandOption>, option: &str) -> Option<CommandOption> {

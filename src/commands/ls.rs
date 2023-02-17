@@ -51,8 +51,7 @@ impl Command for Ls {
             name: "target",
             description: "Path to directory",
             arg_type: vec![
-                ShellType::DirPath,
-                ShellType::GlobPath,
+                ShellType::FilePath,
             ],       
         })
     }

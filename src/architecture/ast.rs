@@ -1,20 +1,23 @@
 use super::{shell_data::ShellData, command::Command, params::Params};
 
 
-pub(crate) struct AstProgram {
+#[derive(Debug)]
+pub struct AstProgram {
 
     command: AstCommand,
 
 }
 
-pub(crate) struct AstCommand {
-    name: &'static str,
-    options: Vec<(String, Option<ShellData>)>,
-    arguments: Vec<ShellData>,
+#[derive(Debug)]
+pub struct AstCommand {
+    pub name: String,
+    pub options: Vec<(String, Option<ShellData>)>,
+    pub arguments: Vec<ShellData>,
 }
 
-pub(crate) struct AstUnknown {
-    name: &'static str,
-    params: Vec<&'static str>,
+#[derive(Debug)]
+pub struct AstUnknown {
+    pub name: &'static str,
+    pub params: Vec<&'static str>,
 }
 

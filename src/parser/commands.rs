@@ -1,4 +1,6 @@
 
+use std::{fmt::Write, str::FromStr};
+
 use nom::{
     IResult,
     branch::alt,
@@ -10,43 +12,50 @@ use nom::{
     Err::{*, self},
     error::{Error, ErrorKind},
 };
-use crate::{architecture::{command::{Command, CommandOption, self}, ast::AstCommand, shell_data::ShellData}, commands::{ls::Ls, echo::Echo}, helpers::lookup::{command_lookup, option_lookup}};
+use crate::{architecture::{command::{Command, CommandOption, self, CommandArgument}, ast::AstCommand, shell_data::ShellData}, commands::{ls::Ls, echo::Echo}, helpers::lookup::{command_lookup, option_lookup}};
 
-fn parse_valid_command(input: &str) -> IResult<&str, &'static str> {
+use super::primitives::parse_shell_data;
+
+fn parse_valid_command(input: &str) -> IResult<&str, &str> {
     alt((
-        value("ls", tag("ls")),
-        value("echo", tag("echo")),
-        value("unknown", alpha1),
+        value("ls", tuple((tag("ls"), multispace0))),
+        value("echo", tuple((tag("echo"), multispace0))),
+        value("unknown", tuple((alpha1, multispace0))),
     ))(input)
 
     // Ok(("", Box::new(Ls {})))
 }
 
+//TODO: figure out how to make this not static
 fn parse_command(input: &str) -> IResult<&str, AstCommand> {
     let (rest, name) = parse_valid_command(input)?;
     match command_lookup(name) {
         Some(c) => {
-            println!("{:?}", (*c).options()) //WORKS :)
-            
-            //lookup command information, parse for valid options and arguments
+            let (rest, (opts, args)) = pair(
+                parse_options_helper(c.options()),
+                parse_arguments_helper((c.req_arguments(), c.list_argument())),
+            )(rest)?;
+            Ok((rest, AstCommand {name: name.to_string(), options: opts, arguments: args}))
         },
         None => {
-            //collect list of arguments.
-            //return AstUnknown:w
-
+            todo!()
+            //Collect vec of all arguments and create AstUnknown
         },
     }
-    todo!() 
 }
 
-fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, Vec<(&str, Option<&str>)>> {
+fn parse_options_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) ->IResult<&str, Vec<(String, Option<ShellData>)>> {
+    move |input| {parse_options(input, command_opts.clone())}
+}
+
+fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, Vec<(String, Option<ShellData>)>> {
 
     //parse compound options
     let (rest, compound_opts) = opt(tuple((tag("-"), alpha1, multispace0)))(input)?;
-    let mut opts: Vec<(&str, Option<&str>)> = vec![];
+    let mut opts: Vec<(String, Option<ShellData>)> = vec![];
     match compound_opts {
         Some((_, flags, _)) => {
-            let mut comp: Vec<(&str, Option<&str>)> = flags.split("").map(|c| (c, None)).filter(|(c, _)| !c.is_empty()).collect();
+            let mut comp: Vec<(String, Option<ShellData>)> = flags.split("").map(|c| (String::from(c), None)).filter(|(c, _)| !c.is_empty()).collect();
             opts.append(&mut comp)
             
         },
@@ -64,38 +73,44 @@ fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str,
 
 }
 
-fn parse_option_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) -> IResult<&str, (&str, Option<&str>)> {
+fn parse_option_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) -> IResult<&str, (String, Option<ShellData>)> {
     move |input| {parse_option(input, command_opts.clone())}
 }
 
-fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, (&str, Option<&str>)> {
+fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, (String, Option<ShellData>)> {
 
     let (rest, (_, opt_name, _)) = tuple((alt((tag("--"), tag("-"))), alpha1, multispace0))(input)?;
 
     match option_lookup(&command_opts, opt_name) {
         Some(option) => {
             match option.data {
-                Some(_) => {
-                    let (rest2, (data, _)) = tuple((alpha1, multispace0))(rest)?;
-                    Ok((rest2, (opt_name, Some(data))))
+                Some(data_type) => {
+                    let (rest2, (data, _)) = tuple((parse_shell_data(vec![data_type]), multispace0))(rest)?;
+                    Ok((rest2, (opt_name.to_string(), Some(data))))
                     
                 },
-                None => Ok((rest, (opt_name, None))),
+                None => Ok((rest, (opt_name.to_string(), None))),
             }
         },
-        None => Err(Failure(Error::new("Not a valid option", ErrorKind::Tag))),
+        None => {
+            Err(Failure(Error::new(opt_name, ErrorKind::Tag)))
+        },
     }
 }
 
-fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<&str>> {
-    let required = command.req_arguments();
-    let list = command.list_argument();
+fn parse_arguments_helper(command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> impl Fn(&str) ->IResult<&str, Vec<ShellData>> {
+    move |input| {parse_arguments(input, command_args.clone())}
+} 
+
+fn parse_arguments(input: &str, command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> IResult<&str, Vec<ShellData>> {
+    let required = command_args.0;
+    let list = command_args.1;
 
     let mut rest: &str = input;
     let mut arguments = vec![];
 
     for arg in &required {
-        let (next_rest, (argument, _)) = tuple((alpha1, multispace0))(rest)?;
+        let (next_rest, (argument, _)) = tuple((parse_shell_data(arg.arg_type.clone()), multispace0))(rest)?;
         arguments.push(argument);
         rest = next_rest;
     }
@@ -104,7 +119,7 @@ fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<
         None => Ok((rest, arguments)),
         Some(arg) => {
             fold_many0(
-                tuple((alpha1, multispace0)),
+                tuple((parse_shell_data(arg.arg_type), multispace0)),
                 move || arguments.clone(),
                 |mut acc, (argument, _)| {
                     acc.push(argument);
@@ -127,24 +142,18 @@ mod tests {
 
     #[test]
     fn test_command_parser() {
-        parse_command("ls");
+        println!("{:?}", parse_command("ls -al --test hello hello hi"));
 
         assert!(1 == 1)
     }
 
     #[test]
     fn test_options_parser() {
-        println!("{:?}", parse_options("--test hello hello", (Ls {}).options()))
-    }
-
-    #[test]
-    fn test_option_parser() {
-        println!("{:?}", parse_option("--test hello hello", (Ls {}).options()))
+        println!("{:?}", parse_options("-al --test hello hello", (Ls {}).options()))
     }
 
     #[test]
     fn test_argument_parser() {
-        println!("{:?}", parse_arguments("hello hello hello", Box::new(Ls {})))
     }
 
 }
