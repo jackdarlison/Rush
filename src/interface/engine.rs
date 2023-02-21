@@ -2,7 +2,9 @@ use std::io::stdout;
 
 use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, self}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor};
 
-use super::{key_event::process_key_event, session::Session};
+use crate::{parser::commands::parse_valid_command, helpers::lookup::command_lookup};
+
+use super::{key_event::process_key_event, session::Session, output::{scroll_off, print_hints}};
 
 pub(crate) fn run() {
 
@@ -45,13 +47,7 @@ pub(crate) fn run() {
                 SideEffects::BreakProgram => break 'shell_loop,
                 SideEffects::BreakCommand => break 'command_loop,
                 SideEffects::ExecuteCommand => {
-                    if cursor_at_bottom() { 
-                        execute!(
-                            stdout(),
-                            terminal::ScrollUp(2),
-                            cursor::MoveToPreviousLine(2),
-                        ).unwrap()
-                     }
+                    scroll_off();
                     execute!(
                         stdout(),
                         cursor::MoveToNextLine(1),
@@ -60,18 +56,42 @@ pub(crate) fn run() {
                     //execute Actual command instead
                     break 'command_loop;
                 },
-                SideEffects::None => (),
+                SideEffects::None => {
+                    if let Ok((_, command)) = parse_valid_command(command_buffer.as_str()) {
+                        match command {
+                            Some(c) => {
+                                let req_args: String = c.req_arguments().iter().fold(String::new(),|mut acc, arg| {
+                                    acc.push_str(" ");
+                                    acc.push_str(arg.name);
+                                    acc
+                                });
+                                let mut list_arg = String::new();
+                                if let Some(arg) = c.list_argument() {
+                                    list_arg.push(' ');
+                                    list_arg.push_str(arg.name);
+                                    list_arg.push_str("..")
+                                }
+                                print_hints(format!(" Options{}{}", req_args, list_arg).as_str())
+                            },
+                            None => {
+                                print_hints(format!(" Options Args").as_str())
+                            },
+                        }
+                    } else {
+                        print_hints(" Error")
+                    }
+
+                    
+
+                    //parse valid command
+                    //lookup command
+                    //add greyed 
+                },
             }
         }
     }
 
     disable_raw_mode().unwrap();
-}
-
-fn cursor_at_bottom() -> bool {
-    let (_, y) = cursor::position().unwrap();
-    let (_, y2) = terminal::size().unwrap();
-    y2 - y <= 2 //scroll off of two given for consistency
 }
 
 pub enum SideEffects {

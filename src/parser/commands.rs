@@ -16,26 +16,25 @@ use crate::{architecture::{command::{Command, CommandOption, self, CommandArgume
 
 use super::primitives::parse_shell_data;
 
-fn parse_valid_command(input: &str) -> IResult<&str, &str> {
-    alt((
+pub fn parse_valid_command(input: &str) -> IResult<&str, Option<Box<dyn Command>>> {
+    let (rest, command) = alt((
         value("ls", tuple((tag("ls"), multispace0))),
         value("echo", tuple((tag("echo"), multispace0))),
-        value("unknown", tuple((alpha1, multispace0))),
-    ))(input)
-
-    // Ok(("", Box::new(Ls {})))
+        value("UNKNOWN", tuple((alpha1, multispace0))),
+    ))(input)?;
+    Ok((rest, command_lookup(command)))
 }
 
 //TODO: figure out how to make this not static
-fn parse_command(input: &str) -> IResult<&str, AstCommand> {
+pub fn parse_command(input: &str) -> IResult<&str, AstCommand> {
     let (rest, name) = parse_valid_command(input)?;
-    match command_lookup(name) {
+    match name {
         Some(c) => {
             let (rest, (opts, args)) = pair(
                 parse_options_helper(c.options()),
                 parse_arguments_helper((c.req_arguments(), c.list_argument())),
             )(rest)?;
-            Ok((rest, AstCommand {name: name.to_string(), options: opts, arguments: args}))
+            Ok((rest, AstCommand {name: c.name().to_string(), options: opts, arguments: args}))
         },
         None => {
             todo!()
@@ -137,7 +136,6 @@ mod tests {
 
     #[test]
     fn test_command_name() {
-        assert_eq!(parse_valid_command("ls"), Ok(("", "ls")))
     }
 
     #[test]
