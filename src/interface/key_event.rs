@@ -2,7 +2,9 @@ use std::io::stdout;
 
 use crossterm::{event::{KeyEvent, KeyModifiers, KeyEventKind, KeyEventState, KeyCode}, style::Print, terminal::{self, Clear}, cursor::MoveLeft};
 
-use super::{session::Session, engine::SideEffects};
+use crate::parser::commands::parse_valid_command;
+
+use super::{session::Session, engine::SideEffects, output::print_below_current, formatting::{format_description, format_options, format_arguments}};
 
 
 
@@ -32,6 +34,27 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: String, mut session: Session)
             ..
         } => {
             side_effects = SideEffects::ExecuteCommand;
+        },
+        KeyEvent {
+            code: KeyCode::Char('d'),
+            modifiers: KeyModifiers::CONTROL,
+            ..
+        } => {
+            print_below_current(format_description(&buffer).as_str())
+        },
+        KeyEvent {
+            code: KeyCode::Char('o'),
+            modifiers: KeyModifiers::CONTROL,
+            ..
+        } => {
+            print_below_current(format_options(&buffer).as_str())
+        },
+        KeyEvent {
+            code: KeyCode::Char('a'),
+            modifiers: KeyModifiers::CONTROL,
+            ..
+        } => {
+            print_below_current(format_arguments(&buffer).as_str())
         },
         KeyEvent {
             code: KeyCode::Backspace,

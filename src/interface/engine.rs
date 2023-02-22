@@ -4,7 +4,7 @@ use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, 
 
 use crate::{parser::commands::{parse_valid_command, parse_command}, helpers::lookup::command_lookup};
 
-use super::{key_event::process_key_event, session::Session, output::{scroll_off, print_hints, process_hints}};
+use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input}, formatting::format_hints};
 
 pub(crate) fn run() {
 
@@ -47,17 +47,18 @@ pub(crate) fn run() {
                 SideEffects::BreakProgram => break 'shell_loop,
                 SideEffects::BreakCommand => break 'command_loop,
                 SideEffects::ExecuteCommand => {
-                    scroll_off();
+                    if cursor_to_bottom_distance() < 2 { scroll_off(2) }
                     execute!(
                         stdout(),
                         cursor::MoveToNextLine(1),
+                        Clear(ClearType::FromCursorDown),
                         Print(format!("Parsed command: {:?}", parse_command(command_buffer.as_str()))),
                     ).unwrap();
                     //TODO execute actual command instead
                     break 'command_loop;
                 },
                 SideEffects::None => {
-                    process_hints(&command_buffer);
+                    print_after_input(format_hints(&command_buffer).as_str());
                 },
             }
         }

@@ -33,7 +33,7 @@ pub fn parse_command(input: &str) -> IResult<&str, AstCommand> {
             Ok((rest, AstCommand {name: c.name().to_string(), options: opts, arguments: args}))
         },
         None => {
-            todo!()
+            Err(Failure(Error::new("Command not yet implemented", ErrorKind::Tag)))
             //Collect vec of all arguments and create AstUnknown
         },
     }
