@@ -1,6 +1,6 @@
 use std::io::stdout;
 
-use crossterm::{event::{KeyEvent, KeyModifiers, KeyEventKind, KeyEventState, KeyCode}, style::Print, terminal};
+use crossterm::{event::{KeyEvent, KeyModifiers, KeyEventKind, KeyEventState, KeyCode}, style::Print, terminal::{self, Clear}, cursor::MoveLeft};
 
 use super::{session::Session, engine::SideEffects};
 
@@ -34,16 +34,17 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: String, mut session: Session)
             side_effects = SideEffects::ExecuteCommand;
         },
         KeyEvent {
-            code: KeyCode::Up,
+            code: KeyCode::Backspace,
             ..
         } => {
-            execute!(stdout(), terminal::ScrollUp(1)).unwrap();
-        },
-        KeyEvent {
-            code: KeyCode::Down,
-            ..
-        } => {
-            execute!(stdout(), terminal::ScrollDown(1)).unwrap();
+            if let Some(_) = buffer.pop() {
+                execute!(
+                    stdout(),
+                    MoveLeft(1),
+                    Print(" "),
+                    MoveLeft(1),
+                ).unwrap();
+            }
         },
         KeyEvent { 
             code: KeyCode::Char(c),

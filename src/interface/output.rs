@@ -39,7 +39,10 @@ pub fn print_hints(input: &str) {
 pub fn process_hints(buffer: &String) {
     if let Ok((rest, (command, space))) = pair(parse_valid_command, multispace0)(buffer.as_str()) {
         //only display hints if theres a space after a command
-        if !space.starts_with(" ") { return }
+        if !space.starts_with(" ") { 
+            execute!(stdout(), Clear(ClearType::UntilNewLine)).unwrap();
+            return
+        }
         match command {
             Some(c) => {
                 let mut opts = String::new();
