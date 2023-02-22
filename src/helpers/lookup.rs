@@ -34,3 +34,7 @@ pub fn get_option_short_name(options: &Vec<CommandOption>, option: &str) -> Opti
 pub fn get_option_type(options: &Vec<CommandOption>, option: &str) -> Option<ShellType> {
     option_lookup(options, option).and_then(|o| o.data)
 }
+
+pub fn is_valid_short(options: &Vec<CommandOption>, short: &str) -> bool {
+    options.iter().any(|opt| opt.short_name == Some(short))
+}

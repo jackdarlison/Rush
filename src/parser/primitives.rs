@@ -8,19 +8,24 @@ use nom::{
 
 use crate::architecture::{shell_data::ShellData, shell_type::ShellType};
 
-pub fn parse_shell_data(data_types: Vec<ShellType>) -> impl Fn(&str)-> IResult<&str, ShellData> {
+pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, ShellData> {
+    move |input| {
+        match data_type {
+            ShellType::Int => return parse_int(input),
+            ShellType::Float => return parse_float(input),
+            ShellType::Number => return parse_number(input),
+            ShellType::String => return parse_string(input),
+            ShellType::Any => return parse_string(input), //CHANGE TO ANY OF THE VALUES NOT STRING
+            ShellType::FilePath => return parse_file_path(input), 
+        }
+    }
+}
+
+pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IResult<&str, ShellData> {
     move |input| {
         for ty in &data_types {
-            match ty {
-                ShellType::Int => return parse_int(input),
-                ShellType::Float => return parse_float(input),
-                ShellType::Number => return parse_number(input),
-                ShellType::String => return parse_string(input),
-                ShellType::Any => return parse_string(input), //CHANGE TO ANY OF THE VALUES NOT STRING
-                ShellType::FilePath => return parse_file_path(input),
-            }
+            return parse_shell_data(*ty)(input)
         }
-        println!("Error case in shell data parsing");
         Err(nom::Err::Failure(nom::error::Error::new("No shell types given", nom::error::ErrorKind::Fail)))
     }
 }

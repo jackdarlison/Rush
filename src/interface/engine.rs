@@ -2,9 +2,9 @@ use std::io::stdout;
 
 use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, self}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor};
 
-use crate::{parser::commands::parse_valid_command, helpers::lookup::command_lookup};
+use crate::{parser::commands::{parse_valid_command, parse_command}, helpers::lookup::command_lookup};
 
-use super::{key_event::process_key_event, session::Session, output::{scroll_off, print_hints}};
+use super::{key_event::process_key_event, session::Session, output::{scroll_off, print_hints, process_hints}};
 
 pub(crate) fn run() {
 
@@ -51,41 +51,13 @@ pub(crate) fn run() {
                     execute!(
                         stdout(),
                         cursor::MoveToNextLine(1),
-                        Print(format!("The command was {}", command_buffer)),
+                        Print(format!("Parsed command: {:?}", parse_command(command_buffer.as_str()))),
                     ).unwrap();
-                    //execute Actual command instead
+                    //TODO execute actual command instead
                     break 'command_loop;
                 },
                 SideEffects::None => {
-                    if let Ok((_, command)) = parse_valid_command(command_buffer.as_str()) {
-                        match command {
-                            Some(c) => {
-                                let req_args: String = c.req_arguments().iter().fold(String::new(),|mut acc, arg| {
-                                    acc.push_str(" ");
-                                    acc.push_str(arg.name);
-                                    acc
-                                });
-                                let mut list_arg = String::new();
-                                if let Some(arg) = c.list_argument() {
-                                    list_arg.push(' ');
-                                    list_arg.push_str(arg.name);
-                                    list_arg.push_str("..")
-                                }
-                                print_hints(format!(" Options{}{}", req_args, list_arg).as_str())
-                            },
-                            None => {
-                                print_hints(format!(" Options Args").as_str())
-                            },
-                        }
-                    } else {
-                        print_hints(" Error")
-                    }
-
-                    
-
-                    //parse valid command
-                    //lookup command
-                    //add greyed 
+                    process_hints(&command_buffer);
                 },
             }
         }
