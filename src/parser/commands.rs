@@ -21,7 +21,6 @@ pub fn parse_valid_command(input: &str) -> IResult<&str, Option<Box<dyn Command>
     Ok((rest, command_lookup(command)))
 }
 
-//TODO: figure out how to make this not static
 pub fn parse_command(input: &str) -> IResult<&str, AstCommand> {
     let (rest, (name, _)) = pair(parse_valid_command, multispace0)(input)?;
     match name {
