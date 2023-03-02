@@ -90,7 +90,7 @@ mod tests {
     fn test_ls() {
 
         let tester = Ls {};
-        let res = tester.run(Session::new(),  AstCommand { name: String::from("ls"), options: vec![], arguments: vec![ShellData::FilePath(String::from("/Users/Jack/Documents"))]});
+        let res = tester.run(Session::new(),  AstCommand { command: Box::new(Ls {}), options: vec![], arguments: vec![ShellData::FilePath(String::from("/Users/Jack/Documents"))]});
         println!("{:?}", res);
         
         assert!(1==1)

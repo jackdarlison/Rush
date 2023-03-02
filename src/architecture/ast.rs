@@ -1,4 +1,4 @@
-use super::shell_data::ShellData;
+use super::{shell_data::ShellData, command::Command};
 
 
 #[derive(Debug)]
@@ -10,7 +10,7 @@ pub struct AstProgram {
 
 #[derive(Debug)]
 pub struct AstCommand {
-    pub name: String,
+    pub command: Box<dyn Command>,
     pub options: Vec<(String, Option<ShellData>)>,
     pub arguments: Vec<ShellData>,
 }

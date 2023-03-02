@@ -29,7 +29,7 @@ pub fn parse_command(input: &str) -> IResult<&str, AstCommand> {
                 parse_options_helper(c.options()),
                 parse_arguments_helper((c.req_arguments(), c.list_argument())),
             )(rest)?;
-            Ok((rest, AstCommand {name: c.name().to_string(), options: opts, arguments: args}))
+            Ok((rest, AstCommand {command: c, options: opts, arguments: args}))
         },
         None => {
             Err(Failure(Error::new("Command not yet implemented", ErrorKind::Tag)))
