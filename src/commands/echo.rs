@@ -1,6 +1,6 @@
 
 
-use crate::architecture::{command::*, shell_error::ShellError, shell_type::ShellType, shell_result::ShellResult, params::Params};
+use crate::{architecture::{command::*, shell_error::ShellError, shell_type::ShellType, shell_result::ShellResult, ast::AstCommand, shell_data::ShellData}, interface::session::Session};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Echo {}
@@ -39,23 +39,23 @@ impl Command for Echo {
         })
     }
 
-    fn run(&self, params: Params) -> Result<ShellResult, ShellError> {
+    fn run(&self, session: Session, params: AstCommand) -> Result<ShellResult, ShellError> {
         let no_newline = params.options.iter().any(|(n, _)| *n=="no-newline");
 
         let mut output: String = String::new();
 
-        
-
-        for arg in params.arg_list.into_iter() {
-            output.push_str(arg);
-
-            if no_newline {
-                output.push(' ');
+        for arg in params.arguments.into_iter() {
+            if let ShellData::String(val) = arg {
+                output.push_str(&val);
+                if no_newline {
+                    output.push(' ');
+                } else {
+                    output.push('\n');
+                }
             } else {
-                output.push('\n');
+                return Err(ShellError::InputError)
             }
         }
-
 
         todo!()
     }

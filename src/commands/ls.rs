@@ -1,4 +1,4 @@
-use crate::architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, params::Params, shell_data::ShellData};
+use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::Session};
 
 extern crate glob;
 use glob::glob;
@@ -56,21 +56,21 @@ impl Command for Ls {
         })
     }
 
-    fn run(&self, params: Params) -> Result<ShellResult, ShellError> {
+    fn run(&self, session: Session, params: AstCommand) -> Result<ShellResult, ShellError> {
         let is_all = params.options.iter().any(|(n, _)| *n=="all");
         let is_long = params.options.iter().any(|(n, _)| *n=="long");
 
-        let target_dir = params.req_args.iter().find(|a| **a=="target");
-
         let mut results: Vec<ShellData> = vec![];
-        for dir in params.arg_list {
-            println!("{:?}", &dir);
-            for entry in glob(&format!("{}/*", dir.to_owned())).unwrap() {
-                println!("{:?}", entry);
-                match entry {
-                    Ok(path) => results.push(ShellData::FilePath(String::from(path.to_str().unwrap()))),
-                    Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
+        for dir in params.arguments {
+            if let ShellData::FilePath(path) = dir {
+                for entry in glob(&format!("{}/*", path)).unwrap() {
+                    match entry {
+                        Ok(path) => results.push(ShellData::FilePath(String::from(path.to_str().unwrap()))),
+                        Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
+                    }
                 }
+            } else {
+                return Err(ShellError::DataTypeError)
             }
         }
 
@@ -90,7 +90,7 @@ mod tests {
     fn test_ls() {
 
         let tester = Ls {};
-        let res = tester.run(Params {options: vec![], req_args: vec![], opt_args: vec![], arg_list: vec!["/ouce"]});
+        let res = tester.run(Session::new(),  AstCommand { name: String::from("ls"), options: vec![], arguments: vec![ShellData::FilePath(String::from("/Users/Jack/Documents"))]});
         println!("{:?}", res);
         
         assert!(1==1)

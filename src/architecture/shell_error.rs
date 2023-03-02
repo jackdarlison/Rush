@@ -9,6 +9,7 @@ pub enum ShellError {
     InputError,
     OutputError,
     UnknownError,
+    DataTypeError,
 }
 
 impl Error for ShellError {
