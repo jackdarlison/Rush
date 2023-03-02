@@ -3,6 +3,7 @@ use crate::architecture::shell_error::ShellError;
 use crate::architecture::shell_result::ShellResult;
 use crate::interface::session::Session;
 use super::ast::AstCommand;
+use super::shell_data::ShellData;
 use core::fmt::Debug;
 
 //trait for built in commands
@@ -16,7 +17,7 @@ pub trait Command: Debug {
     //single argument which can be passed multiple times
     fn list_argument(&self) -> Option<CommandArgument>;
 
-    fn run(&self, session: Session, params: AstCommand) -> Result<ShellResult, ShellError>;
+    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError>;
 
 }
 

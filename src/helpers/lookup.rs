@@ -1,9 +1,11 @@
-use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls}};
+use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd}};
 
 pub fn command_lookup(command: &str) -> Option<Box<dyn Command>> {
     match command {
         "ls" => Some(Box::new(Ls {})),
         "echo" => Some(Box::new(Echo {})),
+        "pwd" => Some(Box::new(Pwd {})),
+        "cd" => Some(Box::new(Cd {})),
         _ => None,
     }
 }

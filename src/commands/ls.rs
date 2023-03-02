@@ -56,12 +56,12 @@ impl Command for Ls {
         })
     }
 
-    fn run(&self, session: Session, params: AstCommand) -> Result<ShellResult, ShellError> {
-        let is_all = params.options.iter().any(|(n, _)| *n=="all");
-        let is_long = params.options.iter().any(|(n, _)| *n=="long");
+    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
+        let is_all = options.iter().any(|(n, _)| *n=="all");
+        let is_long = options.iter().any(|(n, _)| *n=="long");
 
         let mut results: Vec<ShellData> = vec![];
-        for dir in params.arguments {
+        for dir in arguments {
             if let ShellData::FilePath(path) = dir {
                 for entry in glob(&format!("{}/*", path)).unwrap() {
                     match entry {
@@ -90,7 +90,7 @@ mod tests {
     fn test_ls() {
 
         let tester = Ls {};
-        let res = tester.run(Session::new(),  AstCommand { command: Box::new(Ls {}), options: vec![], arguments: vec![ShellData::FilePath(String::from("/Users/Jack/Documents"))]});
+        let res = tester.run(&Session::new(), vec![], vec![ShellData::FilePath(String::from("/Users/Jack/Documents"))]);
         println!("{:?}", res);
         
         assert!(1==1)

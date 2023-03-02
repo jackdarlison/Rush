@@ -39,12 +39,12 @@ impl Command for Echo {
         })
     }
 
-    fn run(&self, session: Session, params: AstCommand) -> Result<ShellResult, ShellError> {
-        let no_newline = params.options.iter().any(|(n, _)| *n=="no-newline");
+    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
+        let no_newline = options.iter().any(|(n, _)| *n=="no-newline");
 
         let mut output: String = String::new();
 
-        for arg in params.arguments.into_iter() {
+        for arg in arguments.into_iter() {
             if let ShellData::String(val) = arg {
                 output.push_str(&val);
                 if no_newline {

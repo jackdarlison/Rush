@@ -1,8 +1,8 @@
 use std::io::stdout;
 
-use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, self}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor};
+use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor};
 
-use crate::{parser::commands::{parse_valid_command, parse_command}, helpers::lookup::command_lookup};
+use crate::parser::commands::parse_command;
 
 use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input}, formatting::format_hints};
 
@@ -28,7 +28,7 @@ pub(crate) fn run() {
         execute!(
             stdout(),
             cursor::MoveToNextLine(1),
-            PrintStyledContent(format!("{} >> ", session.pwd).with(Color::Green)),
+            PrintStyledContent(format!("{} >> ", &session.pwd).with(Color::Green)),
         ).unwrap();
 
         //start command loop
@@ -48,12 +48,24 @@ pub(crate) fn run() {
                 SideEffects::BreakCommand => break 'command_loop,
                 SideEffects::ExecuteCommand => {
                     if cursor_to_bottom_distance() < 2 { scroll_off(2) }
-                    execute!(
-                        stdout(),
-                        cursor::MoveToNextLine(1),
-                        Clear(ClearType::FromCursorDown),
-                        Print(format!("Parsed command: {:?}", parse_command(command_buffer.as_str()))),
-                    ).unwrap();
+
+                    let result = parse_command(&command_buffer.as_str());
+
+                    if let Ok((_, ast)) = result {
+                        execute!(
+                            stdout(),
+                            cursor::MoveToNextLine(1),
+                            Clear(ClearType::FromCursorDown),
+                            Print(format!("command output: {:?}", ast.command.run(&session, ast.options, ast.arguments))),
+                        ).unwrap();
+                    } else {
+                        execute!(
+                            stdout(),
+                            cursor::MoveToNextLine(1),
+                            Clear(ClearType::FromCursorDown),
+                            Print(format!("Error")),
+                        ).unwrap(); 
+                    }
                     //TODO execute actual command instead
                     break 'command_loop;
                 },

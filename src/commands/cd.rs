@@ -1,6 +1,6 @@
 use std::vec;
 
-use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, ast::AstCommand}, interface::session::Session};
+use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, ast::AstCommand, shell_data::ShellData}, interface::session::Session};
 
 
 
@@ -30,7 +30,7 @@ impl Command for Cd {
         None
     }
 
-    fn run(&self, session: Session, params: AstCommand) -> Result<ShellResult, ShellError> {
+    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
         
 
         Ok(ShellResult::None)
