@@ -1,4 +1,4 @@
-use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::Session};
+use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}};
 
 extern crate glob;
 use glob::glob;
@@ -63,7 +63,9 @@ impl Command for Ls {
         let mut results: Vec<ShellData> = vec![];
         for dir in arguments {
             if let ShellData::FilePath(path) = dir {
-                for entry in glob(&format!("{}/*", path)).unwrap() {
+                let mut path = format!("{}/*", path);
+                if !path.starts_with("/") { path = format!("{}/{}", session.pwd, path); }
+                for entry in glob(&path).unwrap() {
                     match entry {
                         Ok(path) => results.push(ShellData::FilePath(String::from(path.to_str().unwrap()))),
                         Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
