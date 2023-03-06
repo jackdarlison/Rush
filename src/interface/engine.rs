@@ -1,14 +1,16 @@
-use std::io::stdout;
+use std::{io::stdout, cmp};
 
-use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor};
+use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor};
 
 use crate::parser::commands::parse_command;
 
-use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input}, formatting::format_hints};
+use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current}, formatting::format_hints, command_buffer::CommandBuffer};
 
 pub(crate) fn run() {
 
-   let mut command_buffer = String::new();
+   let mut command_buffer = CommandBuffer::new();
+   let mut autocomplete_buffer: Vec<&str> = vec![];
+   let mut autocomplete_index: usize = 0;
    let mut session = Session::new();
 
    //TODO handle errors?
@@ -19,6 +21,7 @@ pub(crate) fn run() {
         stdout(),
         Clear(ClearType::All),
         cursor::MoveTo(0,0),
+        EnableLineWrap,
     ).unwrap();
 
     //start main loop
@@ -49,28 +52,27 @@ pub(crate) fn run() {
                 SideEffects::ExecuteCommand => {
                     if cursor_to_bottom_distance() < 2 { scroll_off(2) }
 
-                    let result = parse_command(&command_buffer.as_str());
+                    let result = parse_command(command_buffer.str_contents());
 
                     if let Ok((_, ast)) = result {
-                        execute!(
-                            stdout(),
-                            cursor::MoveToNextLine(1),
-                            Clear(ClearType::FromCursorDown),
-                            Print(format!("command output: {:?}", ast.command.run(&session, ast.options, ast.arguments))),
-                        ).unwrap();
+                        print_below_current(&format!("command output: {:?}", ast.command.run(&session, ast.options, ast.arguments)), false);
                     } else {
-                        execute!(
-                            stdout(),
-                            cursor::MoveToNextLine(1),
-                            Clear(ClearType::FromCursorDown),
-                            Print(format!("Error")),
-                        ).unwrap(); 
+                        print_below_current("Error", false)
                     }
                     //TODO execute actual command instead
                     break 'command_loop;
                 },
+                SideEffects::AutoComplete => {
+                    if !autocomplete_buffer.is_empty() {
+                        autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
+                        todo!()
+                    } else if !command_buffer.contains(" ") { //TODO: Replace with better check, and work for more than just commands
+                        todo!()
+                    }
+                }
                 SideEffects::None => {
-                    print_after_input(format_hints(&command_buffer).as_str());
+                    print_after_input(format_hints(&command_buffer.contents).as_str(), command_buffer.str_contents_after_index());
+                    print_below_current(&format!("{:?} {}", command_buffer, command_buffer.str_contents_after_index()), true);
                 },
             }
         }
@@ -83,5 +85,9 @@ pub enum SideEffects {
     BreakProgram,
     BreakCommand,
     ExecuteCommand,
+    AutoComplete,
     None,
 }
+
+
+

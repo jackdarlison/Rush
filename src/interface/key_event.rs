@@ -1,14 +1,12 @@
 use std::io::stdout;
 
-use crossterm::{event::{KeyEvent, KeyModifiers, KeyEventKind, KeyEventState, KeyCode}, style::Print, terminal::{self, Clear}, cursor::MoveLeft};
+use crossterm::{event::{KeyEvent, KeyModifiers, KeyEventState, KeyCode}, style::Print, cursor::{MoveLeft, MoveRight, SavePosition, RestorePosition}};
 
-use crate::parser::commands::parse_valid_command;
-
-use super::{session::Session, engine::SideEffects, output::print_below_current, formatting::{format_description, format_options, format_arguments}};
+use super::{session::Session, engine::{SideEffects}, output::print_below_current, formatting::{format_description, format_options, format_arguments}, command_buffer::CommandBuffer};
 
 
 
-pub fn process_key_event(ke: KeyEvent, mut buffer: String, mut session: Session) -> (String, Session, SideEffects) {
+pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: Session) -> (CommandBuffer, Session, SideEffects) {
 
     let mut side_effects = SideEffects::None;
 
@@ -40,27 +38,49 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: String, mut session: Session)
             modifiers: KeyModifiers::CONTROL,
             ..
         } => {
-            print_below_current(format_description(&buffer).as_str())
+            print_below_current(format_description(&buffer.contents).as_str(), true)
         },
         KeyEvent {
             code: KeyCode::Char('o'),
             modifiers: KeyModifiers::CONTROL,
             ..
         } => {
-            print_below_current(format_options(&buffer).as_str())
+            print_below_current(format_options(&buffer.contents).as_str(), true)
         },
         KeyEvent {
             code: KeyCode::Char('a'),
             modifiers: KeyModifiers::CONTROL,
             ..
         } => {
-            print_below_current(format_arguments(&buffer).as_str())
+            print_below_current(format_arguments(&buffer.contents).as_str(), true)
         },
+        KeyEvent {
+            code: KeyCode::Left,
+            .. 
+        } => {
+            if buffer.move_left() {
+                execute!(stdout(), MoveLeft(1)).unwrap()
+            }
+        },
+        KeyEvent { 
+            code: KeyCode::Right,
+            .. 
+        } => {
+            if buffer.move_right() {
+                execute!(stdout(), MoveRight(1)).unwrap()
+            }
+        }
+        KeyEvent {
+            code: KeyCode::Tab,
+            ..
+        } => {
+            side_effects = SideEffects::AutoComplete
+        }
         KeyEvent {
             code: KeyCode::Backspace,
             ..
         } => {
-            if let Some(_) = buffer.pop() {
+            if let Some(_) = buffer.delete() {
                 execute!(
                     stdout(),
                     MoveLeft(1),
@@ -75,8 +95,14 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: String, mut session: Session)
             state: KeyEventState::NONE,
             ..
         } => {
-            buffer.push(c);
-            execute!(stdout(), Print(c)).unwrap();
+            buffer.insert(c);
+            execute!(
+                stdout(),
+                Print(c),
+                SavePosition,
+                Print(buffer.str_contents_after_index()),
+                RestorePosition,
+            ).unwrap();
         },
         KeyEvent {
             code: KeyCode::Char(c),
@@ -84,8 +110,14 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: String, mut session: Session)
             state: KeyEventState::NONE, 
             ..
         } => {
-            buffer.push(c.to_ascii_uppercase());
-            execute!(stdout(), Print(c.to_ascii_uppercase())).unwrap();
+            buffer.insert(c.to_ascii_uppercase());
+            execute!(
+                stdout(),
+                Print(c.to_ascii_uppercase()),
+                SavePosition,
+                Print(buffer.str_contents_after_index()),
+                RestorePosition,
+            ).unwrap();
         },
         KeyEvent {
             code: KeyCode::Char(c),
@@ -93,8 +125,14 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: String, mut session: Session)
             state: KeyEventState::CAPS_LOCK,
             ..
         } => {
-            buffer.push(c.to_ascii_uppercase());
-            execute!(stdout(), Print(c.to_ascii_uppercase())).unwrap();
+            buffer.insert(c.to_ascii_uppercase());
+            execute!(
+                stdout(),
+                Print(c.to_ascii_uppercase()),
+                SavePosition,
+                Print(buffer.str_contents_after_index()),
+                RestorePosition,
+            ).unwrap();
         }
         KeyEvent { .. } => (),
     }

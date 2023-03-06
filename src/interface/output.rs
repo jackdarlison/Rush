@@ -1,9 +1,6 @@
-use std::{io::stdout, fmt::Display, cmp::max};
+use std::{io::stdout, cmp::max};
 
-use crossterm::{terminal::{self, EnableLineWrap, Clear, ClearType, DisableLineWrap}, cursor::{self, SavePosition, RestorePosition, MoveToNextLine}, style::{PrintStyledContent, Stylize, Color}};
-use nom::{character::complete::multispace0, sequence::pair};
-
-use crate::{parser::commands::{parse_valid_command, parse_options, parse_command}, architecture::command::Command};
+use crossterm::{terminal::{self, Clear, ClearType}, cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveRight}, style::{PrintStyledContent, Stylize, Color, Print}};
 
 
 pub fn scroll_off(n: u16) {
@@ -26,35 +23,33 @@ pub fn get_height_of_text(input: &str) -> u16 {
     text_width / term_width
 }
 
-pub fn print_below_current(input: &str) {
+pub fn print_below_current(input: &str, restore_pos: bool) {
     if cursor_to_bottom_distance() < get_height_of_text(input) {
      scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance() + 1));
     }
     execute!(
         stdout(),
-        EnableLineWrap,
         SavePosition,
         MoveToNextLine(1),
         Clear(ClearType::FromCursorDown),
         PrintStyledContent(
             input.with(Color::Grey)
         ),
-        RestorePosition,
-        DisableLineWrap,
-    ).unwrap()
+    ).unwrap();
+    if restore_pos {
+        execute!(stdout(), RestorePosition).unwrap()
+    }
 }
 
-pub fn print_after_input(input: &str) {
+pub fn print_after_input(input: &str, rest_buffer: &str) {
     execute!(
         stdout(),
-        EnableLineWrap,
         SavePosition,
-        Clear(ClearType::UntilNewLine),
+        Print(rest_buffer),
         PrintStyledContent(
             input.with(Color::Cyan)
         ),
         RestorePosition,
-        DisableLineWrap,
     ).unwrap()
 }
 
