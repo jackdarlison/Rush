@@ -1,4 +1,6 @@
-use std::cmp;
+use std::{cmp, ops::Range};
+
+use crossterm::cursor::MoveRight;
 
 use super::output::print_below_current;
 
@@ -92,5 +94,29 @@ impl CommandBuffer {
 
     pub fn str_contents_after_index(&self) -> &str {
         self.contents.split_at(self.index).1
+    }
+
+    //returns the amount needed to move right
+    pub fn replace_current_word(&mut self, new: &str) -> (usize, usize) {
+        let range = self.get_current_word().1;
+        self.index = range.0 + new.len();
+        self.contents.replace_range(Range {start: range.0, end: range.1}, new);
+        (range.0, self.index)
+    }
+
+    pub fn get_current_word(&self) -> (String, (usize, usize)) {
+        let (left, right) = self.contents.split_at(self.index);
+        let left_part = if left.ends_with(" ") {
+            ""
+        } else {
+            left.split_ascii_whitespace().last().unwrap_or("")
+        };
+        let right_part = if right.starts_with(" ") {
+            ""
+        } else {
+            right.split_ascii_whitespace().next().unwrap_or("")
+        };
+        (format!("{}{}", left_part, right_part).to_owned(), (self.index - left_part.len(), self.index + right_part.len()))
+
     }
 }

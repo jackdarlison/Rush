@@ -1,10 +1,10 @@
 use std::{io::stdout, cmp};
 
-use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor};
+use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor::{self, MoveLeft, MoveRight}};
 
-use crate::parser::commands::parse_command;
+use crate::{parser::commands::parse_command, helpers::completion::complete_command};
 
-use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current}, formatting::format_hints, command_buffer::CommandBuffer};
+use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current, refresh_buffer}, formatting::format_hints, command_buffer::CommandBuffer};
 
 pub(crate) fn run() {
 
@@ -12,6 +12,7 @@ pub(crate) fn run() {
    let mut autocomplete_buffer: Vec<&str> = vec![];
    let mut autocomplete_index: usize = 0;
    let mut session = Session::new();
+   let mut prompt: String = format!("{} >> ", &session.pwd);
 
    //TODO handle errors?
    enable_raw_mode().unwrap();
@@ -31,7 +32,7 @@ pub(crate) fn run() {
         execute!(
             stdout(),
             cursor::MoveToNextLine(1),
-            PrintStyledContent(format!("{} >> ", &session.pwd).with(Color::Green)),
+            PrintStyledContent(prompt.clone().with(Color::Green)),
         ).unwrap();
 
         //start command loop
@@ -63,16 +64,31 @@ pub(crate) fn run() {
                     break 'command_loop;
                 },
                 SideEffects::AutoComplete => {
-                    if !autocomplete_buffer.is_empty() {
-                        autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
-                        todo!()
-                    } else if !command_buffer.contains(" ") { //TODO: Replace with better check, and work for more than just commands
-                        todo!()
+                    if autocomplete_buffer.is_empty() {
+                        let word = command_buffer.get_current_word().0;
+                        autocomplete_buffer.extend(complete_command(word));
                     }
+                    if !autocomplete_buffer.is_empty() {
+                        command_buffer.replace_current_word(autocomplete_buffer[autocomplete_index]);
+                        autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
+                        refresh_buffer(prompt.len().try_into().unwrap_or(0), &command_buffer);
+                        print_below_current(&format!("{:?}", autocomplete_buffer), true);
+                    } else {
+                        print_below_current("No matching commands", true);
+                    }
+
+                    // if !autocomplete_buffer.is_empty() {
+                    //     autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
+                    //     todo!()
+                    // } else if !command_buffer.contains(" ") { //TODO: Replace with better check, and work for more than just commands
+                    //     todo!()
+                    // }
                 }
                 SideEffects::None => {
+                    autocomplete_buffer.clear();
+                    autocomplete_index = 0;
                     print_after_input(format_hints(&command_buffer.contents).as_str(), command_buffer.str_contents_after_index());
-                    print_below_current(&format!("{:?} {}", command_buffer, command_buffer.str_contents_after_index()), true);
+                    print_below_current(&format!("{:?} {:?}", command_buffer, command_buffer.get_current_word()), true);
                 },
             }
         }

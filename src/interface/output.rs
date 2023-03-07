@@ -1,6 +1,8 @@
 use std::{io::stdout, cmp::max};
 
-use crossterm::{terminal::{self, Clear, ClearType}, cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveRight}, style::{PrintStyledContent, Stylize, Color, Print}};
+use crossterm::{terminal::{self, Clear, ClearType}, cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveRight, MoveLeft, MoveTo}, style::{PrintStyledContent, Stylize, Color, Print}};
+
+use super::command_buffer::CommandBuffer;
 
 
 pub fn scroll_off(n: u16) {
@@ -51,6 +53,22 @@ pub fn print_after_input(input: &str, rest_buffer: &str) {
         ),
         RestorePosition,
     ).unwrap()
+}
+
+pub fn refresh_buffer(prompt_size: u16, buffer: &CommandBuffer) {
+    let distance_to_end = buffer.contents.len() - buffer.index;
+    execute!(
+        stdout(),
+        MoveTo(prompt_size, cursor::position().unwrap().1),
+        Print(&buffer.contents),
+        Clear(ClearType::UntilNewLine),
+    ).unwrap();
+    if distance_to_end > 0 {
+        execute!(
+            stdout(),
+            MoveLeft(distance_to_end.try_into().unwrap_or(0)),
+        ).unwrap();
+    }
 }
 
 
