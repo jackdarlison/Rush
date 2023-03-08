@@ -1,0 +1,11 @@
+appenders:
+  file_logger:
+    kind: file
+    path: log/rush.log
+    encoder:
+      pattern: "{d} - {m}{n}"
+
+root:
+  level: debug
+  appenders:
+    - file_logger

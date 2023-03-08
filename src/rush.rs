@@ -1,3 +1,5 @@
+use log::info;
+
 use crate::interface::engine;
 
 #[macro_use]
@@ -10,7 +12,10 @@ mod helpers;
 mod interface;
 
 fn main() {
-    println!("Welcome to Rush!");
+
+    log4rs::init_file("log_config.yaml", Default::default()).unwrap();
+
+    info!("Rush Initiated");
 
     engine::run();
 }
