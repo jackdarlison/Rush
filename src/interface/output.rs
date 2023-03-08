@@ -16,18 +16,19 @@ pub fn scroll_off(n: u16) {
 pub fn cursor_to_bottom_distance() -> u16 {
     let (_, y) = cursor::position().unwrap();
     let (_, y2) = terminal::size().unwrap();
+    //minimum terminal size is (1,1), minimum cursor position is (0,0) so should never underflow
     y2 - y - 1
 }
 
 pub fn get_height_of_text(input: &str) -> u16 {
-    let term_width = terminal::size().unwrap().0;
-    let text_width: u16 = input.len().try_into().unwrap();
+    let term_width = terminal::size().unwrap_or((1, 1)).0;
+    let text_width: u16 = input.len().try_into().unwrap_or(1);
     text_width / term_width
 }
 
 pub fn print_below_current(input: &str, restore_pos: bool) {
     if cursor_to_bottom_distance() < get_height_of_text(input) {
-     scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance() + 1));
+        scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance() + 3));
     }
     execute!(
         stdout(),

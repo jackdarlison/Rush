@@ -76,13 +76,6 @@ pub(crate) fn run() {
                     } else {
                         print_below_current("No matching commands", true);
                     }
-
-                    // if !autocomplete_buffer.is_empty() {
-                    //     autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
-                    //     todo!()
-                    // } else if !command_buffer.contains(" ") { //TODO: Replace with better check, and work for more than just commands
-                    //     todo!()
-                    // }
                 }
                 SideEffects::None => {
                     autocomplete_buffer.clear();

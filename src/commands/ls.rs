@@ -1,7 +1,7 @@
-use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}};
+use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}, helpers::file_system::{hidden, name}};
 
 extern crate glob;
-use glob::glob;
+use glob::{glob, MatchOptions, glob_with};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Ls {}
@@ -21,7 +21,7 @@ impl Command for Ls {
             CommandOption {
                 name: "all",
                 short_name: Some("a"),
-                description: "Print hidden files as well",
+                description: "Show hidden files",
                 data: None,
                 required: false
             },
@@ -31,6 +31,13 @@ impl Command for Ls {
                 description: "Print in long format",
                 data: None,
                 required: false
+            },
+            CommandOption {
+                name: "case-sensitive",
+                short_name: Some("c"),
+                description: "Make file patterns case sensitive",
+                data: None,
+                required: false,
             },
             CommandOption {
                 name: "test",
@@ -56,18 +63,34 @@ impl Command for Ls {
         })
     }
 
-    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
+    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, mut arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
         let is_all = options.iter().any(|(n, _)| *n=="all");
         let is_long = options.iter().any(|(n, _)| *n=="long");
+        let is_case_sensitive = options.iter().any(|(n, _)| *n=="case-sensitive");
 
+        println!("{:?} {:?}", options, is_all);
+
+        let match_options = MatchOptions {
+            case_sensitive: is_case_sensitive,
+            require_literal_separator: false,
+            require_literal_leading_dot: !is_all,
+        };
+
+        //Run current directory if no arguments
+        if arguments.is_empty() {
+            arguments.push(ShellData::FilePath(session.pwd.clone()));
+        }
         let mut results: Vec<ShellData> = vec![];
         for dir in arguments {
-            if let ShellData::FilePath(path) = dir {
-                let mut path = format!("{}/*", path);
+            if let ShellData::FilePath(mut path) = dir {
+                path = format!("{}/*", path);
+                //if path is local, prepend the current directory
                 if !path.starts_with("/") { path = format!("{}/{}", session.pwd, path); }
-                for entry in glob(&path).unwrap() {
+                for entry in glob_with(&path, match_options).unwrap() {
                     match entry {
-                        Ok(path) => results.push(ShellData::FilePath(String::from(path.to_str().unwrap()))),
+                        Ok(path_buf) => {
+                            results.push(ShellData::FilePath(name(&path_buf)))
+                        },
                         Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
                     }
                 }
@@ -92,7 +115,11 @@ mod tests {
     fn test_ls() {
 
         let tester = Ls {};
-        let res = tester.run(&Session::new(), vec![], vec![ShellData::FilePath(String::from("/Users/Jack/Documents"))]);
+        let res = tester.run(
+            &Session::new(),
+            // vec![(String::from("all"), None)],
+            vec![],
+            vec![ShellData::FilePath(String::from("/Users/Jack"))]);
         println!("{:?}", res);
         
         assert!(1==1)

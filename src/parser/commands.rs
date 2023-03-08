@@ -12,7 +12,7 @@ use nom::{
     Err::{*, self},
     error::{Error, ErrorKind},
 };
-use crate::{architecture::{command::{Command, CommandOption, self, CommandArgument}, ast::AstCommand, shell_data::ShellData}, commands::{ls::Ls, echo::Echo}, helpers::lookup::{command_lookup, option_lookup, is_valid_short}};
+use crate::{architecture::{command::{Command, CommandOption, self, CommandArgument}, ast::AstCommand, shell_data::ShellData}, commands::{ls::Ls, echo::Echo}, helpers::commands::{command_lookup, option_lookup, is_valid_short}};
 
 use super::primitives::{parse_shell_data, parse_shell_data_many};
 
@@ -49,13 +49,18 @@ pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&
     let mut opts: Vec<(String, Option<ShellData>)> = vec![];
     match compound_opts {
         Some((_, flags, _)) => {
-            let mut comp: Vec<(String, Option<ShellData>)> = flags.split("").map(|c| (String::from(c), None)).filter(|(c, _)| !c.is_empty()).collect();
-            //TODO improve to display specific invalid option 
-            if comp.iter().any(|(name, _)| !is_valid_short(&command_opts, name)) {
-                return Err(Failure(Error::new("Invalid compound option", ErrorKind::Tag))) 
+            let short_options: Vec<&str> = flags.split("").filter(|s| !s.is_empty()).collect();
+            for so in short_options {
+                match option_lookup(&command_opts, so) {
+                    Some(o) => {
+                        opts.push((String::from(o.name), None))
+                    },
+                    None => {
+                        return Err(Failure(Error::new("Invalid short option", ErrorKind::Tag)))
+
+                    }
+                }
             }
-            opts.append(&mut comp)
-            
         },
         None => {},
     }
@@ -139,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_command_parser() {
-        println!("{:?}", parse_command("ls -al"));
+        println!("{:?}", parse_command("ls -a"));
 
         assert!(1 == 1)
     }
