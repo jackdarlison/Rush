@@ -28,6 +28,7 @@ pub(crate) fn run() {
     //start main loop
     'shell_loop: loop {
         //prompt, clear buffer..
+        prompt = format!("{} >> ", &session.pwd);
         command_buffer.clear();
         execute!(
             stdout(),
@@ -56,7 +57,7 @@ pub(crate) fn run() {
                     let result = parse_command(command_buffer.str_contents());
 
                     if let Ok((_, ast)) = result {
-                        print_below_current(&format!("command output: {:?}", ast.command.run(&session, ast.options, ast.arguments)), false);
+                        print_below_current(&format!("command output: {:?}", ast.command.run(&mut session, ast.options, ast.arguments)), false);
                     } else {
                         print_below_current("Error", false)
                     }
@@ -81,7 +82,7 @@ pub(crate) fn run() {
                     autocomplete_buffer.clear();
                     autocomplete_index = 0;
                     print_after_input(format_hints(&command_buffer.contents).as_str(), command_buffer.str_contents_after_index());
-                    print_below_current(&format!("{:?} {:?}", command_buffer, command_buffer.get_current_word()), true);
+                    // print_below_current(&format!("{:?} {:?}", command_buffer, command_buffer.get_current_word()), true);
                 },
             }
         }
