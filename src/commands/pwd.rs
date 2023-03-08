@@ -25,7 +25,7 @@ impl Command for Pwd {
         None
     }
 
-    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
+    fn run(&self, session: &mut Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
         Ok(ShellResult::Value(ShellData::FilePath(session.pwd.to_owned())))
     }
 }

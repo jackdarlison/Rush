@@ -13,7 +13,7 @@ impl Command for Ls {
     }
 
     fn description(&self) -> &str {
-        "Print the contents of a directory"
+        "Print the contents of a list of directories"
     }
 
     fn options(&self) -> Vec<CommandOption> {
@@ -33,7 +33,7 @@ impl Command for Ls {
                 required: false
             },
             CommandOption {
-                name: "case-sensitive",
+                name: "case_sensitive",
                 short_name: Some("c"),
                 description: "Make file patterns case sensitive",
                 data: None,
@@ -55,20 +55,18 @@ impl Command for Ls {
 
     fn list_argument(&self) -> Option<CommandArgument> {
         Some(CommandArgument {
-            name: "target",
-            description: "Path to directory",
+            name: "directory_name",
+            description: "Name of directory",
             arg_type: vec![
                 ShellType::FilePath,
             ],       
         })
     }
 
-    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, mut arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
+    fn run(&self, session: &mut Session, options: Vec<(String, Option<ShellData>)>, mut arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
         let is_all = options.iter().any(|(n, _)| *n=="all");
         let is_long = options.iter().any(|(n, _)| *n=="long");
-        let is_case_sensitive = options.iter().any(|(n, _)| *n=="case-sensitive");
-
-        println!("{:?} {:?}", options, is_all);
+        let is_case_sensitive = options.iter().any(|(n, _)| *n=="case_sensitive");
 
         let match_options = MatchOptions {
             case_sensitive: is_case_sensitive,
@@ -116,8 +114,7 @@ mod tests {
 
         let tester = Ls {};
         let res = tester.run(
-            &Session::new(),
-            // vec![(String::from("all"), None)],
+            &mut Session::new(),
             vec![],
             vec![ShellData::FilePath(String::from("/Users/Jack"))]);
         println!("{:?}", res);

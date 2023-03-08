@@ -1,4 +1,4 @@
-use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd}};
+use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod}};
 
 pub fn command_lookup(command: &str) -> Option<Box<dyn Command>> {
     match command {
@@ -6,6 +6,8 @@ pub fn command_lookup(command: &str) -> Option<Box<dyn Command>> {
         "echo" => Some(Box::new(Echo {})),
         "pwd" => Some(Box::new(Pwd {})),
         "cd" => Some(Box::new(Cd {})),
+        "mkdir" => Some(Box::new(Mkdir {})),
+        "chmod" => Some(Box::new(Chmod {})),
         _ => None,
     }
 }

@@ -12,13 +12,13 @@ impl Command for Echo {
     }
 
     fn description(&self) -> &str {
-        "arguments to standard out"
+        "Print arguments to standard out"
     }
 
     fn options(&self) -> Vec<CommandOption> {
         vec![
                 CommandOption {
-                    name: "no-newline",
+                    name: "no_newline",
                     short_name: Some("n"),
                     description: "Print without the trailing newline character",
                     data: None,
@@ -39,8 +39,8 @@ impl Command for Echo {
         })
     }
 
-    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
-        let no_newline = options.iter().any(|(n, _)| *n=="no-newline");
+    fn run(&self, session: &mut Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError> {
+        let no_newline = options.iter().any(|(n, _)| *n=="no_newline");
 
         let mut output: String = String::new();
 

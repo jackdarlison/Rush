@@ -7,7 +7,7 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub enum ShellError {
     InputError,
-    OutputError,
+    CommandError,
     UnknownError,
     DataTypeError,
 }

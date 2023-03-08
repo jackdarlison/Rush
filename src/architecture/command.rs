@@ -17,7 +17,7 @@ pub trait Command: Debug {
     //single argument which can be passed multiple times
     fn list_argument(&self) -> Option<CommandArgument>;
 
-    fn run(&self, session: &Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError>;
+    fn run(&self, session: &mut Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError>;
 
 }
 

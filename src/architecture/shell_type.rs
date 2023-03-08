@@ -7,4 +7,5 @@ pub enum ShellType {
     Number,
     Float,
     Int,
+    Octal,
 }
