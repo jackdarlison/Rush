@@ -1,7 +1,8 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, fs::canonicalize};
 
 
 pub fn name(path: &PathBuf) -> String {
+    let path = canonicalize(path).unwrap();
     String::from(path.to_str().unwrap_or("Error getting path name"))
 }
 
