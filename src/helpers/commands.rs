@@ -1,15 +1,18 @@
 use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod}};
 
+pub fn commands() -> Vec<Box<dyn Command>> {
+    vec![
+        Box::new(Ls {}),
+        Box::new(Echo {}),
+        Box::new(Pwd {}),
+        Box::new(Cd {}),
+        Box::new(Mkdir {}),
+        Box::new(Chmod {}),
+    ]
+}
+
 pub fn command_lookup(command: &str) -> Option<Box<dyn Command>> {
-    match command {
-        "ls" => Some(Box::new(Ls {})),
-        "echo" => Some(Box::new(Echo {})),
-        "pwd" => Some(Box::new(Pwd {})),
-        "cd" => Some(Box::new(Cd {})),
-        "mkdir" => Some(Box::new(Mkdir {})),
-        "chmod" => Some(Box::new(Chmod {})),
-        _ => None,
-    }
+    commands().into_iter().find(|c| c.name() == command)
 }
 
 pub fn get_command_options(command: &str) -> Option<Vec<CommandOption>> {
