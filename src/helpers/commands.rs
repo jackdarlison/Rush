@@ -1,4 +1,4 @@
-use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod}};
+use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod, ln::Ln}};
 
 pub fn commands() -> Vec<Box<dyn Command>> {
     vec![
@@ -8,6 +8,7 @@ pub fn commands() -> Vec<Box<dyn Command>> {
         Box::new(Cd {}),
         Box::new(Mkdir {}),
         Box::new(Chmod {}),
+        Box::new(Ln {}),
     ]
 }
 
