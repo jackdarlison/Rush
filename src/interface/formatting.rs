@@ -15,7 +15,7 @@ pub fn format_hints(buffer: &String) -> String {
             return String::new();
         }
         match command {
-            Some(c) => {
+            Ok(c) => {
                 let mut opts = String::new();
                 let mut req_args = String::new();
                 let mut list_arg = String::new();
@@ -45,8 +45,8 @@ pub fn format_hints(buffer: &String) -> String {
                 }
                 return format!("{}{}{}", opts, req_args, list_arg)
             },
-            None => {
-                return format!(" unknown command")
+            Err(e) => {
+                return e
             },
         }
     }
@@ -54,14 +54,14 @@ pub fn format_hints(buffer: &String) -> String {
 }
 
 pub fn format_description(buffer: &String) -> String {
-    if let Ok((_, Some(c))) = parse_valid_command(&buffer) {
+    if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         return String::from(c.description());
     }
     String::new()
 }
 
 pub fn format_options(buffer: &String) -> String {
-    if let Ok((_, Some(c))) = parse_valid_command(&buffer) {
+    if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         let options = c.options();
         let options_string = options.iter().fold(String::new(), |mut acc, opt| {
             acc.push_str("- ");
@@ -83,7 +83,7 @@ pub fn format_options(buffer: &String) -> String {
 }
 
 pub fn format_arguments(buffer: &String) -> String {
-    if let Ok((_, Some(c))) = parse_valid_command(&buffer) {
+    if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         let mut args = String::new();
 
         args.push_str("Required Arguments: \r\n");

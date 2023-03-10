@@ -14,35 +14,35 @@ use nom::{
 };
 use crate::{architecture::{command::{Command, CommandOption, self, CommandArgument}, ast::AstCommand, shell_data::ShellData}, commands::{ls::Ls, echo::Echo}, helpers::commands::{command_lookup, option_lookup, is_valid_short}};
 
-use super::primitives::{parse_shell_data, parse_shell_data_many};
+use super::{primitives::{parse_shell_data, parse_shell_data_many}, parser_error::ParserError};
 
-pub fn parse_valid_command(input: &str) -> IResult<&str, Option<Box<dyn Command>>> {
+pub fn parse_valid_command(input: &str) -> IResult<&str, Result<Box<dyn Command>, String>, ParserError<&str>> {
     let (rest, command) = alpha1(input)?;
     Ok((rest, command_lookup(command)))
 }
 
-pub fn parse_command(input: &str) -> IResult<&str, AstCommand> {
+pub fn parse_command(input: &str) -> IResult<&str, AstCommand, ParserError<&str>> {
     let (rest, (name, _)) = pair(parse_valid_command, multispace0)(input)?;
     match name {
-        Some(c) => {
+        Ok(c) => {
             let (rest, (opts, args)) = pair(
                 parse_options_helper(c.options()),
                 parse_arguments_helper((c.req_arguments(), c.list_argument())),
             )(rest)?;
             Ok((rest, AstCommand {command: c, options: opts, arguments: args}))
         },
-        None => {
-            Err(Failure(Error::new("Command not yet implemented", ErrorKind::Tag)))
+        Err(e) => {
+            Err(Failure(ParserError::CommandError(e)))
             //Collect vec of all arguments and create AstUnknown
         },
     }
 }
 
-fn parse_options_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) ->IResult<&str, Vec<(String, Option<ShellData>)>> {
+fn parse_options_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) ->IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
     move |input| {parse_options(input, command_opts.clone())}
 }
 
-pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, Vec<(String, Option<ShellData>)>> {
+pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
 
     //parse compound options
     let (rest, compound_opts) = opt(tuple((tag("-"), alpha1, multispace0)))(input)?;
@@ -56,7 +56,7 @@ pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&
                         opts.push((String::from(o.name), None))
                     },
                     None => {
-                        return Err(Failure(Error::new("Invalid short option", ErrorKind::Tag)))
+                        return Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", so, command_opts))))
 
                     }
                 }
@@ -76,11 +76,11 @@ pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&
 
 }
 
-fn parse_option_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) -> IResult<&str, (String, Option<ShellData>)> {
+fn parse_option_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
     move |input| {parse_option(input, command_opts.clone())}
 }
 
-pub fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, (String, Option<ShellData>)> {
+pub fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
 
     let (rest, (_, opt_name, _)) = tuple((alt((tag("--"), tag("-"))), alpha1, multispace0))(input)?;
 
@@ -96,16 +96,16 @@ pub fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&s
             }
         },
         None => {
-            Err(Failure(Error::new(opt_name, ErrorKind::Tag)))
+            Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", opt_name, command_opts))))
         },
     }
 }
 
-pub fn parse_arguments_helper(command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> impl Fn(&str) ->IResult<&str, Vec<ShellData>> {
+pub fn parse_arguments_helper(command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> impl Fn(&str) ->IResult<&str, Vec<ShellData>, ParserError<&str>> {
     move |input| {parse_arguments(input, command_args.clone())}
 } 
 
-fn parse_arguments(input: &str, command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> IResult<&str, Vec<ShellData>> {
+fn parse_arguments(input: &str, command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> IResult<&str, Vec<ShellData>, ParserError<&str>> {
     let required = command_args.0;
     let list = command_args.1;
 

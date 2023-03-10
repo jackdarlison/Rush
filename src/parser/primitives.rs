@@ -7,12 +7,14 @@ use nom::{
     number::complete::float,
     bytes::complete::tag,
     multi::fold_many1,
-    combinator::not,
+    combinator::not, Err::Error,
 };
 
 use crate::architecture::{shell_data::ShellData, shell_type::ShellType};
 
-pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, ShellData> {
+use super::parser_error::ParserError;
+
+pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, ShellData, ParserError<&str>> {
     move |input| {
         match data_type {
             ShellType::Int => return parse_int(input),
@@ -26,16 +28,16 @@ pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, 
     }
 }
 
-pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IResult<&str, ShellData> {
+pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IResult<&str, ShellData, ParserError<&str>> {
     move |input| {
         for ty in &data_types {
             return parse_shell_data(*ty)(input)
         }
-        Err(nom::Err::Failure(nom::error::Error::new("No shell types given", nom::error::ErrorKind::Fail)))
+        Err(Error(ParserError::DataError(format!("{} does not parse for types {:?}", input, data_types))))
     }
 }
 
-pub fn file_path_character(input: &str) -> IResult<&str, &str> {
+pub fn file_path_character(input: &str) -> IResult<&str, &str, ParserError<&str>> {
     alt((
         alphanumeric1,
         tag("/"),
@@ -51,7 +53,7 @@ pub fn file_path_character(input: &str) -> IResult<&str, &str> {
     ))(input)
 }
 
-pub fn parse_file_path(input: &str) -> IResult<&str, ShellData> {
+pub fn parse_file_path(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     let (rest, filepath) = fold_many1(
         file_path_character,
         || String::new(),
@@ -64,26 +66,26 @@ pub fn parse_file_path(input: &str) -> IResult<&str, ShellData> {
     return Ok((rest, ShellData::FilePath(filepath)))
 }
 
-pub fn parse_int(input: &str) -> IResult<&str, ShellData> {
+pub fn parse_int(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     map(i32, |v| ShellData::Int(v))(input)
 }
 
-pub fn parse_float(input: &str) -> IResult<&str, ShellData> {
+pub fn parse_float(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     map(float, |v| ShellData::Float(v))(input)
 }
 
-pub fn parse_number(input: &str) -> IResult<&str, ShellData> {
+pub fn parse_number(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     parse_float(input)
     //potential to tell if number is actually an integer
 }
 
-pub fn parse_octal(input: &str) -> IResult<&str, ShellData> {
+pub fn parse_octal(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     map(oct_digit1, |v| {
         ShellData::Int(i32::from_str_radix(v, 8).unwrap())
     })(input)
 }
 
-pub fn parse_string(input: &str) -> IResult<&str, ShellData> {
+pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     //TODO: Parse any character not just alphanum
     let (rest, string) = fold_many1(
         verify(anychar, |c| !c.is_ascii_whitespace()),

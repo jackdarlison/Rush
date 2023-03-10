@@ -12,16 +12,17 @@ pub fn commands() -> Vec<Box<dyn Command>> {
     ]
 }
 
-pub fn command_lookup(command: &str) -> Option<Box<dyn Command>> {
+pub fn command_lookup(command: &str) -> Result<Box<dyn Command>, String> {
     commands().into_iter().find(|c| c.name() == command)
+        .ok_or(format!("{} is not a known command", command))
 }
 
-pub fn get_command_options(command: &str) -> Option<Vec<CommandOption>> {
-    command_lookup(command).and_then(|c| Some(c.options()))
+pub fn get_command_options(command: &str) -> Result<Vec<CommandOption>, String> {
+    command_lookup(command).and_then(|c| Ok(c.options()))
 }
 
-pub fn get_command_arguments(command: &str) -> Option<(Vec<CommandArgument>, Option<CommandArgument>)> {
-    command_lookup(command).and_then(|c| Some((c.req_arguments(), c.list_argument())))
+pub fn get_command_arguments(command: &str) -> Result<(Vec<CommandArgument>, Option<CommandArgument>), String> {
+    command_lookup(command).and_then(|c| Ok((c.req_arguments(), c.list_argument())))
 }
 
 pub fn option_lookup(options: &Vec<CommandOption>, option: &str) -> Option<CommandOption> {
