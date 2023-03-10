@@ -6,7 +6,7 @@ use log::{info, error};
 use crate::architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData};
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Chmod {}
 
 impl Command for Chmod {

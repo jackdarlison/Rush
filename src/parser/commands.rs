@@ -26,8 +26,8 @@ pub fn parse_command(input: &str) -> IResult<&str, AstCommand, ParserError<&str>
     match name {
         Ok(c) => {
             let (rest, (opts, args)) = pair(
-                parse_options_helper(c.options()),
-                parse_arguments_helper((c.req_arguments(), c.list_argument())),
+                parse_options_helper(c.clone()),
+                parse_arguments_helper(c.clone()),
             )(rest)?;
             Ok((rest, AstCommand {command: c, options: opts, arguments: args}))
         },
@@ -38,11 +38,11 @@ pub fn parse_command(input: &str) -> IResult<&str, AstCommand, ParserError<&str>
     }
 }
 
-fn parse_options_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) ->IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
-    move |input| {parse_options(input, command_opts.clone())}
+fn parse_options_helper(command: Box<dyn Command>) -> impl Fn(&str) ->IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
+    move |input| {parse_options(input, command.clone())}
 }
 
-pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
+pub fn parse_options(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
 
     //parse compound options
     let (rest, compound_opts) = opt(tuple((tag("-"), alpha1, multispace0)))(input)?;
@@ -51,12 +51,12 @@ pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&
         Some((_, flags, _)) => {
             let short_options: Vec<&str> = flags.split("").filter(|s| !s.is_empty()).collect();
             for so in short_options {
-                match option_lookup(&command_opts, so) {
+                match option_lookup(command.clone(), so) {
                     Some(o) => {
                         opts.push((String::from(o.name), None))
                     },
                     None => {
-                        return Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", so, command_opts))))
+                        return Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", so, command.name()))))
 
                     }
                 }
@@ -66,7 +66,7 @@ pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&
     }
 
     fold_many0(
-        parse_option_helper(command_opts),
+        parse_option_helper(command),
         move || opts.clone(),
         | mut acc, (name, data) | {
             acc.push((name, data));
@@ -76,15 +76,15 @@ pub fn parse_options(input: &str, command_opts: Vec<CommandOption>) -> IResult<&
 
 }
 
-fn parse_option_helper(command_opts: Vec<CommandOption>) -> impl Fn(&str) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
-    move |input| {parse_option(input, command_opts.clone())}
+fn parse_option_helper(command: Box<dyn Command>) -> impl FnMut(&str) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
+    move |input| {parse_option(input, command.clone())}
 }
 
-pub fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
+pub fn parse_option(input: &str, command: Box<dyn Command>) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
 
     let (rest, (_, opt_name, _)) = tuple((alt((tag("--"), tag("-"))), alpha1, multispace0))(input)?;
 
-    match option_lookup(&command_opts, opt_name) {
+    match option_lookup(command.clone(), opt_name) {
         Some(option) => {
             match option.data {
                 Some(data_type) => {
@@ -96,18 +96,18 @@ pub fn parse_option(input: &str, command_opts: Vec<CommandOption>) -> IResult<&s
             }
         },
         None => {
-            Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", opt_name, command_opts))))
+            Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", opt_name, command.name()))))
         },
     }
 }
 
-pub fn parse_arguments_helper(command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> impl Fn(&str) ->IResult<&str, Vec<ShellData>, ParserError<&str>> {
-    move |input| {parse_arguments(input, command_args.clone())}
+pub fn parse_arguments_helper(command: Box<dyn Command>) -> impl Fn(&str) ->IResult<&str, Vec<ShellData>, ParserError<&str>> {
+    move |input| {parse_arguments(input, command.clone())}
 } 
 
-fn parse_arguments(input: &str, command_args: (Vec<CommandArgument>, Option<CommandArgument>)) -> IResult<&str, Vec<ShellData>, ParserError<&str>> {
-    let required = command_args.0;
-    let list = command_args.1;
+fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<ShellData>, ParserError<&str>> {
+    let required = command.req_arguments();
+    let list = command.list_argument();
 
     let mut rest: &str = input;
     let mut arguments = vec![];
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_options_parser() {
-        println!("{:?}", parse_options("", (Ls {}).options()))
+        println!("{:?}", parse_options("", Box::new(Ls {})))
     }
 
     #[test]

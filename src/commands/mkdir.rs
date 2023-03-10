@@ -5,7 +5,7 @@ use log::info;
 use crate::architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_error::ShellError, shell_result::ShellResult, shell_data::ShellData};
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Mkdir {}
 
 impl Command for Mkdir {

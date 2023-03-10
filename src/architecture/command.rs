@@ -1,3 +1,5 @@
+use dyn_clone::DynClone;
+
 use crate::architecture::shell_type::ShellType;
 use crate::architecture::shell_error::ShellError;
 use crate::architecture::shell_result::ShellResult;
@@ -7,7 +9,7 @@ use super::shell_data::ShellData;
 use core::fmt::Debug;
 
 //trait for built in commands
-pub trait Command: Debug {
+pub trait Command: Debug + DynClone {
     fn name(&self) -> &str;
     fn description(&self) -> &str;
     //list of possible options for command
@@ -20,6 +22,8 @@ pub trait Command: Debug {
     fn run(&self, session: &mut Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError>;
 
 }
+
+dyn_clone::clone_trait_object!(Command);
 
 #[derive(Debug, Clone)]
 pub struct CommandArgument {
