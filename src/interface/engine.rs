@@ -56,10 +56,13 @@ pub(crate) fn run() {
 
                     let result = parse_command(command_buffer.str_contents());
 
-                    if let Ok((_, ast)) = result {
-                        print_below_current(&format!("command output: {:?}", ast.command.run(&mut session, ast.options, ast.arguments)), false);
-                    } else {
-                        print_below_current("Error", false)
+                    match result {
+                        Ok((_, ast)) => {
+                            print_below_current(&format!("command output: {:?}", ast.command.run(&mut session, ast.options, ast.arguments)), false);
+                        },
+                        Err(e) => {
+                            print_below_current(&format!("{:?}", e), false)
+                        }
                     }
                     //TODO execute actual command instead
                     break 'command_loop;

@@ -89,11 +89,11 @@ impl Command for Ls {
                         Ok(path_buf) => {
                             results.push(ShellData::FilePath(name(&path_buf)))
                         },
-                        Err(_) => return Err(ShellError::UnknownError), //TODO: improve error message
+                        Err(e) => return Err(ShellError::CommandError(format!("Error with file system glob: {}", e))), //TODO: improve error message
                     }
                 }
             } else {
-                return Err(ShellError::DataTypeError)
+                return Err(ShellError::DataTypeError(format!("{} expects file path arguements", self.name())))
             }
         }
 

@@ -43,7 +43,7 @@ impl Command for Mkdir {
 
     fn run(&self, session: &mut crate::interface::session::Session, options: Vec<(String, Option<crate::architecture::shell_data::ShellData>)>, arguments: Vec<crate::architecture::shell_data::ShellData>) -> Result<crate::architecture::shell_result::ShellResult, crate::architecture::shell_error::ShellError> {
         if arguments.is_empty() {
-            return Err(ShellError::InputError)
+            return Err(ShellError::InputError(format!("{} expects at least 1 argument, 0 given", self.name())))
         }
         let move_into = options.iter().any(|(o, _)| *o=="move");
 
@@ -51,7 +51,7 @@ impl Command for Mkdir {
             if let ShellData::FilePath(mut path) = argument {
                 if !path.starts_with("/") { path = format!("{}/{}", session.pwd.clone(), path) }
                 if let Err(e) = create_dir_all(&path) {
-                    return Err(ShellError::CommandError);
+                    return Err(ShellError::CommandError(format!("Error creating directories: {}", e)));
                 }
                 info!("Created directory: {}", &path);
                 if move_into {
@@ -59,7 +59,7 @@ impl Command for Mkdir {
                     info!("Moved into: {}", &path);
                 }
             } else {
-                return Err(ShellError::DataTypeError);
+                return Err(ShellError::DataTypeError(format!("{} expecting filepath type arguments", self.name())));
             }
         }
 

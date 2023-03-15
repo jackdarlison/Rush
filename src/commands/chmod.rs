@@ -39,20 +39,20 @@ impl Command for Chmod {
     fn run(&self, session: &mut crate::interface::session::Session, options: Vec<(String, Option<crate::architecture::shell_data::ShellData>)>, arguments: Vec<crate::architecture::shell_data::ShellData>) -> Result<crate::architecture::shell_result::ShellResult, crate::architecture::shell_error::ShellError> {
 
         if arguments.len() < 2 {
-            return Err(ShellError::InputError);
+            return Err(ShellError::InputError(format!("{} needs at least 2 arguments, {} given", self.name(), arguments.len())));
         }
 
         let mut permissions_code: u32;
 
         if let Some(ShellData::Int(val)) = arguments.first() {
-            if *val > 0o777 { return Err(ShellError::DataTypeError) }
+            if *val > 0o777 { return Err(ShellError::DataTypeError(format!("Value ({:o}) is over 777", val))) }
             if let Ok(uval) = (*val).try_into() {
                 permissions_code = uval;
             } else {
-                return Err(ShellError::DataTypeError);
+                return Err(ShellError::DataTypeError(format!("{} can not be made into an unsigned integer", val)));
             }
         } else {
-            return Err(ShellError::DataTypeError);
+            return Err(ShellError::DataTypeError(format!("First argument is expecting an integer")));
         }
 
         let files = arguments.split_at(1).1;
@@ -66,10 +66,10 @@ impl Command for Chmod {
                     set_permissions(&path, permissions.clone());
                     info!("set {} permissions to {:o}", &path, &permissions.mode());
                 } else {
-                    return Err(ShellError::CommandError)
+                    return Err(ShellError::CommandError(format!("Metadata for {} is inaccessible", path)))
                 }
             } else {
-                return Err(ShellError::DataTypeError);
+                return Err(ShellError::DataTypeError(format!("Arguments are expected to be file paths")));
             }
         }
 

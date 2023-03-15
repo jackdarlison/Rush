@@ -1,6 +1,6 @@
 
 
-use crate::{architecture::{command::*, shell_error::ShellError, shell_type::ShellType, shell_result::ShellResult, ast::AstCommand, shell_data::ShellData}, interface::session::Session};
+use crate::{architecture::{command::*, shell_error::ShellError, shell_type::ShellType, shell_result::ShellResult, shell_data::ShellData}, interface::session::Session};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Echo {}
@@ -53,11 +53,11 @@ impl Command for Echo {
                     output.push('\n');
                 }
             } else {
-                return Err(ShellError::InputError)
+                return Err(ShellError::InputError(format!("Expecting string arguments")))
             }
         }
 
-        todo!()
+        Ok(ShellResult::Value(ShellData::String(output)))
     }
 
 }

@@ -6,18 +6,22 @@ use std::fmt;
 //Error type for the shell
 #[derive(Debug, Clone)]
 pub enum ShellError {
-    InputError,
-    CommandError,
-    UnknownError,
-    DataTypeError,
+    InputError(String),
+    CommandError(String),
+    UnknownError(String),
+    DataTypeError(String),
 }
 
-impl Error for ShellError {
-
-}
+impl Error for ShellError {}
 
 impl fmt::Display for ShellError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "There has been a shell error")
+        let msg = match self {
+            ShellError::InputError(m) => m,
+            ShellError::CommandError(m) => m,
+            ShellError::UnknownError(m) => m,
+            ShellError::DataTypeError(m) => m, 
+        };
+        write!(f, "{}", msg)
     }
 }

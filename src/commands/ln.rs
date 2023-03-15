@@ -51,7 +51,7 @@ impl Command for Ln {
         let is_sym = options.iter().any(|(n, _)| *n=="symbolic");
 
         if arguments.len() != 2 {
-            return Err(ShellError::InputError)
+            return Err(ShellError::InputError(format!("{} expects 2 arguments, {} given", self.name(), arguments.len())))
         }
 
         if let (ShellData::FilePath(mut s), ShellData::FilePath(mut l)) = (arguments[0].clone(), arguments[1].clone()) {
@@ -60,20 +60,20 @@ impl Command for Ln {
             if is_sym {
                 if let Err(e) = symlink(&s, &l) {
                     error!("{:?}", e);
-                    return Err(ShellError::CommandError)
+                    return Err(ShellError::CommandError(format!("Error in creating symlink: {}", e)))
                 } else {
                     info!("Created symbolic link {} to {}", &l, &s);
                 }
             } else {
                 if let Err(e) = hard_link(&s, &l) {
                     error!("{:?}", e);
-                    return Err(ShellError::CommandError)
+                    return Err(ShellError::CommandError(format!("Error in creating hard link: {}", e)))
                 } else {
                     info!("Created hard link {} to {}", &l, &s);
                 }
             }
         } else {
-            return Err(ShellError::DataTypeError);
+            return Err(ShellError::DataTypeError(format!("{} expects file path type arguments", self.name())));
         }
 
 

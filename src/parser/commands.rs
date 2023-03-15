@@ -1,18 +1,15 @@
 
-use std::{fmt::Write, str::FromStr};
-
 use nom::{
     IResult,
     branch::alt,
     bytes::complete::tag, 
-    combinator::{map, value, opt, peek}, 
-    character::complete::{alpha1, alphanumeric1, anychar, multispace1, multispace0}, 
-    multi::{many0, fold_many0}, 
-    sequence::{pair, separated_pair, delimited, tuple}, 
-    Err::{*, self},
-    error::{Error, ErrorKind},
+    combinator::opt, 
+    character::complete::{alpha1, multispace0}, 
+    multi::fold_many0, 
+    sequence::{pair, tuple}, 
+    Err::*,
 };
-use crate::{architecture::{command::{Command, CommandOption, self, CommandArgument}, ast::AstCommand, shell_data::ShellData}, commands::{ls::Ls, echo::Echo}, helpers::commands::{command_lookup, option_lookup, is_valid_short}};
+use crate::{architecture::{command::Command, ast::AstCommand, shell_data::ShellData}, helpers::commands::{command_lookup, option_lookup}};
 
 use super::{primitives::{parse_shell_data, parse_shell_data_many}, parser_error::ParserError};
 
@@ -56,7 +53,7 @@ pub fn parse_options(input: &str, command: Box<dyn Command>) -> IResult<&str, Ve
                         opts.push((String::from(o.name), None))
                     },
                     None => {
-                        return Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", so, command.name()))))
+                        return Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {}", so, command.name()))))
 
                     }
                 }
@@ -96,7 +93,7 @@ pub fn parse_option(input: &str, command: Box<dyn Command>) -> IResult<&str, (St
             }
         },
         None => {
-            Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {:?}", opt_name, command.name()))))
+            Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {}", opt_name, command.name()))))
         },
     }
 }
@@ -135,6 +132,8 @@ fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<
 
 #[cfg(test)]
 mod tests {
+
+    use crate::commands::ls::Ls;
 
     use super::*;
 
