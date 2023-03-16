@@ -2,8 +2,11 @@ use std::{path::PathBuf, fs::canonicalize};
 
 
 pub fn name(path: &PathBuf) -> String {
-    let path = canonicalize(path).unwrap();
-    String::from(path.to_str().unwrap_or("Error getting path name"))
+    if let Ok(canon_dir) = canonicalize(path) {
+        String::from(canon_dir.to_str().unwrap_or("Error getting canon directory name"))
+    } else {
+        String::from(path.to_str().unwrap_or("Error getting path string"))
+    }
 }
 
 pub fn hidden(path: &PathBuf) -> bool {

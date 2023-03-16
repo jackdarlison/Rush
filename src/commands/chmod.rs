@@ -63,10 +63,14 @@ impl Command for Chmod {
                 if let Ok(metadata) = path_buf.metadata() {
                     let mut permissions = metadata.permissions();
                     permissions.set_mode(permissions_code);
-                    set_permissions(&path, permissions.clone());
-                    info!("set {} permissions to {:o}", &path, &permissions.mode());
+                    if let Err(e) = set_permissions(&path, permissions.clone()) {
+                        error!("{:?}", e);
+                        return Err(ShellError::CommandError(format!("Error setting permissions for {} - {}", path, e)))
+                    } else {
+                        info!("set {} permissions to {:o}", &path, &permissions.mode());
+                    }
                 } else {
-                    return Err(ShellError::CommandError(format!("Metadata for {} is inaccessible", path)))
+                    return Err(ShellError::CommandError(format!("Metadata for {} is inaccessible, maybe the file does not exist?", path)))
                 }
             } else {
                 return Err(ShellError::DataTypeError(format!("Arguments are expected to be file paths")));

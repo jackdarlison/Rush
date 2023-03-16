@@ -4,7 +4,7 @@ use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, 
 
 use crate::{parser::commands::parse_command, helpers::completion::complete_command};
 
-use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current, refresh_buffer}, formatting::format_hints, command_buffer::CommandBuffer};
+use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current, refresh_buffer, print_prompt}, formatting::{format_hints, format_shell_result}, command_buffer::CommandBuffer};
 
 pub(crate) fn run() {
 
@@ -30,11 +30,7 @@ pub(crate) fn run() {
         //prompt, clear buffer..
         prompt = format!("{} >> ", &session.pwd);
         command_buffer.clear();
-        execute!(
-            stdout(),
-            cursor::MoveToNextLine(1),
-            PrintStyledContent(prompt.clone().with(Color::Green)),
-        ).unwrap();
+        print_prompt(&prompt.clone());
 
         //start command loop
         'command_loop: loop {
@@ -58,13 +54,22 @@ pub(crate) fn run() {
 
                     match result {
                         Ok((_, ast)) => {
-                            print_below_current(&format!("command output: {:?}", ast.command.run(&mut session, ast.options, ast.arguments)), false);
+                            let command_result = ast.command.run(&mut session, ast.options, ast.arguments);
+                            match command_result {
+                                Ok(sr) => {
+                                    if let Some(s) = format_shell_result(sr) {
+                                        print_below_current(&s, false);
+                                    }
+                                },
+                                Err(se) => {
+                                    print_below_current(&format!("{}", se), false)
+                                }
+                            }
                         },
                         Err(e) => {
                             print_below_current(&format!("{:?}", e), false)
                         }
                     }
-                    //TODO execute actual command instead
                     break 'command_loop;
                 },
                 SideEffects::AutoComplete => {

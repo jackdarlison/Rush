@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}, helpers::file_system::{hidden, name}};
 
 extern crate glob;
-use glob::{glob, MatchOptions, glob_with};
+use glob::{glob, MatchOptions, glob_with, Paths};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Ls {}
@@ -78,16 +80,22 @@ impl Command for Ls {
         if arguments.is_empty() {
             arguments.push(ShellData::FilePath(session.pwd.clone()));
         }
-        let mut results: Vec<ShellData> = vec![];
+        let mut results: String = String::new();
         for dir in arguments {
-            if let ShellData::FilePath(mut path) = dir {
-                path = format!("{}/*", path);
+            if let ShellData::FilePath(path) = dir {
+                let mut dir_path = path.clone();
                 //if path is local, prepend the current directory
-                if !path.starts_with("/") { path = format!("{}/{}", session.pwd, path); }
-                for entry in glob_with(&path, match_options).unwrap() {
+                if !dir_path.starts_with("/") { dir_path = format!("{}/{}", session.pwd, path); }
+                if !PathBuf::from(&dir_path).is_dir() {
+                    return Err(ShellError::InputError(format!("{} is not a directory", &dir_path)))
+                }
+                dir_path = format!("{}/*", dir_path);
+                results.push_str(&format!("/{}:\r\n", path.split("/").last().unwrap()));
+                for entry in glob_with(&dir_path, match_options).unwrap() {
                     match entry {
                         Ok(path_buf) => {
-                            results.push(ShellData::FilePath(name(&path_buf)))
+                            //TODO: process options, also need to get file information
+                            results.push_str(&format!("\t{}\r\n", name(&path_buf).split("/").last().unwrap()))
                         },
                         Err(e) => return Err(ShellError::CommandError(format!("Error with file system glob: {}", e))), //TODO: improve error message
                     }
@@ -97,9 +105,11 @@ impl Command for Ls {
             }
         }
 
-        //TODO: process options, also need to get file information
+        //remove last return + newline
+        results.pop();
+        results.pop();
 
-        Ok(ShellResult::List(results))
+        Ok(ShellResult::Value(ShellData::String(results)))
 
     }
 

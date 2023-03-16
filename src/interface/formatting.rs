@@ -3,7 +3,7 @@ use std::io::stdout;
 use crossterm::terminal::{Clear, ClearType};
 use nom::{sequence::pair, character::complete::multispace0};
 
-use crate::parser::commands::{parse_command, parse_valid_command};
+use crate::{parser::commands::{parse_command, parse_valid_command}, architecture::{shell_result::ShellResult, shell_error::ShellError}};
 
 use super::output::print_after_input;
 
@@ -102,4 +102,22 @@ pub fn format_arguments(buffer: &String) -> String {
         return args;
     }
     String::new()
+}
+
+pub fn format_shell_result(result: ShellResult) -> Option<String> {
+    match result {
+        ShellResult::None => None,
+        ShellResult::Value(v) => Some(format!("{}", v)),
+        ShellResult::List(l) => {
+            if l.is_empty() { return None }
+            let mut output = l.into_iter().fold(String::new(), |mut acc, s| {
+                acc.push_str(&format!("{}\r\n", s));
+                acc
+            });
+            //remove final return + newline
+            output.pop();
+            output.pop();
+            Some(output)
+        }
+    }
 }
