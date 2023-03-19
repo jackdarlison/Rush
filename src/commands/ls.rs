@@ -1,8 +1,10 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::{SystemTime, UNIX_EPOCH}, fmt, alloc::System, fs::Metadata};
 
 use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}, helpers::file_system::{hidden, name}};
 
+extern crate chrono;
 extern crate glob;
+use chrono::NaiveDateTime;
 use glob::{glob, MatchOptions, glob_with, Paths};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -94,8 +96,15 @@ impl Command for Ls {
                 for entry in glob_with(&dir_path, match_options).unwrap() {
                     match entry {
                         Ok(path_buf) => {
-                            //TODO: process options, also need to get file information
-                            results.push_str(&format!("\t{}\r\n", name(&path_buf).split("/").last().unwrap()))
+                            if is_long {
+                                if let Ok(metadata) = path_buf.metadata() {
+                                    results.push_str(&format!("{} {} {} {}\r\n", file_type(&metadata), sys_time_to_string(metadata.modified().unwrap()), metadata.len(), name(&path_buf)))
+                                } else {
+                                    return Err(ShellError::CommandError(format!("Error accessing metadata for {}, maybe the file does not exist?", name(&path_buf))))
+                                }
+                            } else {
+                                results.push_str(&format!("  {}\r\n", name(&path_buf).split("/").last().unwrap()))
+                            }
                         },
                         Err(e) => return Err(ShellError::CommandError(format!("Error with file system glob: {}", e))), //TODO: improve error message
                     }
@@ -115,6 +124,27 @@ impl Command for Ls {
 
 }
 
+
+fn sys_time_to_string(sys_time: SystemTime) -> String {
+    let seconds_since = sys_time.duration_since(UNIX_EPOCH).unwrap().as_secs();
+    if let Some(date) = NaiveDateTime::from_timestamp_opt(seconds_since.try_into().unwrap_or(0), 0) {
+        format!("{}", date)
+    } else {
+        String::from("ERROR")
+    }
+}
+
+fn file_type(metadata: &Metadata) -> String {
+    if metadata.is_dir() {
+        String::from("Dir")
+    } else if metadata.is_file() {
+        String::from("File")
+    } else {
+        String::from("Link")
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -133,3 +163,5 @@ mod tests {
     }
 
 }
+
+

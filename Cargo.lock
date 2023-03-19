@@ -453,6 +453,7 @@ dependencies = [
 name = "rush"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "crossterm",
  "dyn-clone",
  "glob",
