@@ -50,11 +50,17 @@ impl Command for Echo {
                 if no_newline {
                     output.push(' ');
                 } else {
-                    output.push('\n');
+                    output.push_str("\r\n");
                 }
             } else {
                 return Err(ShellError::InputError(format!("Expecting string arguments")))
             }
+        }
+
+        if !no_newline {
+            //remove extra newlines
+            output.pop();
+            output.pop();
         }
 
         Ok(ShellResult::Value(ShellData::String(output)))
