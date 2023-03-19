@@ -1,12 +1,16 @@
 use nom::error::{ErrorKind, ParseError};
 
+use crate::architecture::shell_type::ShellType;
+
 
 #[derive(Debug, PartialEq)]
 pub enum ParserError<I> {
     CommandError(String),
     OptionError(String),
     ArgumentError(String),
-    DataError(String),
+    DataError(ShellType),
+    Incomplete,
+    Unknown,
     Nom(I, ErrorKind),
 }
 
