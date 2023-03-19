@@ -5,10 +5,8 @@ use nom::{sequence::pair, character::complete::multispace0};
 
 use crate::{parser::commands::{parse_command, parse_valid_command}, architecture::{shell_result::ShellResult, shell_error::ShellError}};
 
-use super::output::print_after_input;
-
 pub fn format_hints(buffer: &String) -> String {
-    if let Ok((rest, (command, space))) = pair(parse_valid_command, multispace0)(buffer.as_str()) {
+    if let Ok((_rest, (command, space))) = pair(parse_valid_command, multispace0)(buffer.as_str()) {
         //only display hints if theres a space after a command
         if !space.starts_with(" ") { 
             execute!(stdout(), Clear(ClearType::UntilNewLine)).unwrap();
@@ -40,7 +38,7 @@ pub fn format_hints(buffer: &String) -> String {
                         }
                     },
                     Err(e) => {
-                        return format!(" {}", e)
+                        return format!("{}", e)
                     }
                 }
                 return format!("{}{}{}", opts, req_args, list_arg)

@@ -92,6 +92,20 @@ impl CommandBuffer {
         self.index += s.len()
     }
 
+    pub fn get_word_index(&self) -> usize {
+        let (left, _) = self.contents.split_at(self.index);
+        let left_words = left.split_ascii_whitespace().count();
+        if left_words == 0 {
+            0
+        } else {
+            if left.ends_with(" ") {
+                left_words
+            } else {
+                left_words - 1
+            }
+        }
+    }
+
     pub fn str_contents_after_index(&self) -> &str {
         self.contents.split_at(self.index).1
     }

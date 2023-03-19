@@ -62,6 +62,7 @@ pub fn print_after_input(input: &str, rest_buffer: &str) {
         SavePosition,
         Clear(ClearType::UntilNewLine),
         Print(rest_buffer),
+        Print(" "),
         PrintStyledContent(
             input.with(Color::Cyan)
         ),

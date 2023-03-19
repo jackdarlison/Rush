@@ -46,8 +46,14 @@ pub(crate) fn run() {
             //process event
             match side_effects {
                 SideEffects::BreakProgram => break 'shell_loop,
-                SideEffects::BreakCommand => break 'command_loop,
+                SideEffects::BreakCommand => {
+                    autocomplete_buffer.clear();
+                    autocomplete_index = 0;
+                    break 'command_loop
+                },
                 SideEffects::ExecuteCommand => {
+                    autocomplete_buffer.clear();
+                    autocomplete_index = 0;
                     if cursor_to_bottom_distance() < 2 { scroll_off(2) }
 
                     let result = parse_command(command_buffer.str_contents());
@@ -67,23 +73,25 @@ pub(crate) fn run() {
                             }
                         },
                         Err(e) => {
-                            print_below_current(&format!("{:?}", e), false)
+                            print_below_current(&format!("{}", e), false)
                         }
                     }
                     break 'command_loop;
                 },
                 SideEffects::AutoComplete => {
-                    if autocomplete_buffer.is_empty() {
-                        let word = command_buffer.get_current_word().0;
-                        autocomplete_buffer.extend(complete_command(word));
-                    }
-                    if !autocomplete_buffer.is_empty() {
-                        command_buffer.replace_current_word(autocomplete_buffer[autocomplete_index]);
-                        autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
-                        refresh_buffer(prompt.len().try_into().unwrap_or(0), &command_buffer);
-                        print_below_current(&format!("{:?}", autocomplete_buffer), true);
-                    } else {
-                        print_below_current("No matching commands", true);
+                    if command_buffer.get_word_index() == 0 {
+                        if autocomplete_buffer.is_empty() {
+                            let word = command_buffer.get_current_word().0;
+                            autocomplete_buffer.extend(complete_command(word));
+                        }
+                        if !autocomplete_buffer.is_empty() {
+                            command_buffer.replace_current_word(autocomplete_buffer[autocomplete_index]);
+                            autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
+                            refresh_buffer(prompt.len().try_into().unwrap_or(0), &command_buffer);
+                            print_below_current(&format!("{:?}", autocomplete_buffer), true);
+                        } else {
+                            print_below_current("No matching commands", true);
+                        }
                     }
                 }
                 SideEffects::None => {
