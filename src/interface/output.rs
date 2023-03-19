@@ -9,7 +9,7 @@ pub fn scroll_off(n: u16) {
     execute!(
         stdout(),
         terminal::ScrollUp(n),
-        cursor::MoveToPreviousLine(n),
+        cursor::MoveUp(n),
     ).unwrap()
 }
 
@@ -38,8 +38,9 @@ pub fn print_prompt(prompt: &str) {
 }
 
 pub fn print_below_current(input: &str, restore_pos: bool) {
-    if cursor_to_bottom_distance() < get_height_of_text(input) {
-        scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance() + 3));
+    let so = 1;
+    if cursor_to_bottom_distance() < get_height_of_text(input) + so {
+        scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance() + so));
     }
     execute!(
         stdout(),
