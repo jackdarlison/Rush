@@ -35,7 +35,7 @@ impl Command for Echo {
         Some(CommandArgument {
             name: "args",
             description: "The list of arguments to print out",
-            arg_type: vec![ShellType::Any],
+            arg_type: vec![ShellType::String],
         })
     }
 

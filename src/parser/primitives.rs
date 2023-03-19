@@ -11,7 +11,7 @@ use nom::{
     Err, sequence::delimited,
 };
 
-use crate::architecture::{shell_data::ShellData, shell_type::ShellType, ast::AstUnknown};
+use crate::{architecture::{shell_data::ShellData, shell_type::ShellType, ast::AstUnknown}, convert_parser_error};
 
 use super::parser_error::ParserError;
 
@@ -55,51 +55,40 @@ pub fn file_path_character(input: &str) -> IResult<&str, &str, ParserError<&str>
 }
 
 pub fn parse_file_path(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    let (rest, filepath) = fold_many1(
+    let (rest, filepath) = convert_parser_error!(fold_many1(
         file_path_character,
         || String::new(),
          | mut acc, file_char| {
             acc.push_str(file_char);
             acc
          }
-    )(input)?;
+    )(input), ShellType::FilePath)?;
     //TODO: Match glob pattern struct to check valid path
     return Ok((rest, ShellData::FilePath(filepath)))
 }
 
 pub fn parse_int(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    map(i32, |v| ShellData::Int(v))(input)
+    convert_parser_error!(map(i32, |v| ShellData::Int(v))(input), ShellType::Int)
 }
 
 pub fn parse_float(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    map(float, |v| ShellData::Float(v))(input)
+    convert_parser_error!(map(float, |v| ShellData::Float(v))(input), ShellType::Float)
 }
 
 pub fn parse_number(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    parse_float(input)
-    //potential to tell if number is actually an integer
+    //Decide if number is float or not
+    convert_parser_error!(parse_float(input), ShellType::Float)
 }
 
 pub fn parse_octal(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    map(oct_digit1, |v| {
+    convert_parser_error!(map(oct_digit1, |v| {
         ShellData::Int(i32::from_str_radix(v, 8).unwrap())
-    })(input).map_err(|e: Err<ParserError<&str>>| {
-        match e {
-            Error(ParserError::Nom(i, _ek)) => {
-                if i.is_empty() {
-                    Error(ParserError::Incomplete)
-                } else {
-                    Error(ParserError::DataError(ShellType::Octal))
-                }
-            },
-            e => e,
-        }
-    })
+    })(input), ShellType::Octal)
 }
 
 pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    let (rest, _) = char('"')(input)?;
-    let (rest, (chars, _)) = many_till(anychar, char('"'))(rest)?;
+    let (rest, _) = convert_parser_error!(char('"')(input), ShellType::String)?;
+    let (rest, (chars, _)) = convert_parser_error!(many_till(anychar, char('"'))(rest), ShellType::String)?;
     let string = chars.iter().fold(String::new(), |mut acc, c| {acc.push(*c); acc});
     Ok((rest, ShellData::String(string)))
 }
