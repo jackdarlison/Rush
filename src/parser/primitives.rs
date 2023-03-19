@@ -3,14 +3,15 @@ use nom::{
     IResult, 
     combinator::{map, verify},
     branch::alt,
-    character::{complete::{i32, alphanumeric1, multispace1, anychar, oct_digit1}, is_space},
+    character::{complete::{char, i32, alphanumeric1, multispace1, anychar, oct_digit1}, is_space},
     number::complete::float,
     bytes::complete::tag,
-    multi::fold_many1,
+    multi::{fold_many1, fold_many0, many_till},
     combinator::not, Err::Error,
+    Err, sequence::delimited,
 };
 
-use crate::architecture::{shell_data::ShellData, shell_type::ShellType};
+use crate::architecture::{shell_data::ShellData, shell_type::ShellType, ast::AstUnknown};
 
 use super::parser_error::ParserError;
 
@@ -33,7 +34,7 @@ pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IRe
         for ty in &data_types {
             return parse_shell_data(*ty)(input)
         }
-        Err(Error(ParserError::DataError(format!("{} does not parse for types {:?}", input, data_types))))
+        Err(Error(ParserError::Unknown))
     }
 }
 
@@ -82,20 +83,25 @@ pub fn parse_number(input: &str) -> IResult<&str, ShellData, ParserError<&str>> 
 pub fn parse_octal(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     map(oct_digit1, |v| {
         ShellData::Int(i32::from_str_radix(v, 8).unwrap())
-    })(input)
+    })(input).map_err(|e: Err<ParserError<&str>>| {
+        match e {
+            Error(ParserError::Nom(i, _ek)) => {
+                if i.is_empty() {
+                    Error(ParserError::Incomplete)
+                } else {
+                    Error(ParserError::DataError(ShellType::Octal))
+                }
+            },
+            e => e,
+        }
+    })
 }
 
 pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    //TODO: Parse any character not just alphanum
-    let (rest, string) = fold_many1(
-        verify(anychar, |c| !c.is_ascii_whitespace()),
-        || String::new(),
-        |mut acc, ch| {
-            acc.push(ch);
-            acc
-    })(input)?;
+    let (rest, _) = char('"')(input)?;
+    let (rest, (chars, _)) = many_till(anychar, char('"'))(rest)?;
+    let string = chars.iter().fold(String::new(), |mut acc, c| {acc.push(*c); acc});
     Ok((rest, ShellData::String(string)))
-
 }
 
 #[cfg(test)]
@@ -114,6 +120,6 @@ mod tests {
 
     #[test]
     fn test_string() {
-        assert_eq!(parse_string("-input[]/..* abc"), Ok((" abc", ShellData::String(String::from("-input[]/..*")))))
+        assert_eq!(parse_string("\"test string 123$\""), Ok(("", ShellData::String(String::from("test string 123$")))))
     }
 }
