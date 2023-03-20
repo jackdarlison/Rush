@@ -1,17 +1,16 @@
-use log::info;
+
 use nom::{
     IResult, 
-    combinator::{map, verify},
+    combinator::map,
     branch::alt,
-    character::{complete::{char, i32, alphanumeric1, multispace1, anychar, oct_digit1}, is_space},
+    character::{complete::{char, i32, alphanumeric1, anychar, oct_digit1}},
     number::complete::float,
     bytes::complete::tag,
-    multi::{fold_many1, fold_many0, many_till},
-    combinator::not, Err::{Error, Failure},
-    Err, sequence::delimited,
+    multi::{fold_many1, many_till}, Err::{Error, Failure},
+    Err,
 };
 
-use crate::{architecture::{shell_data::ShellData, shell_type::ShellType, ast::AstUnknown}, convert_parser_error};
+use crate::{architecture::{shell_data::ShellData, shell_type::ShellType}, convert_parser_error};
 
 use super::parser_error::ParserError;
 
@@ -98,6 +97,12 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_filepath() {
+        assert_eq!(parse_file_path("valid/**/file\\ path"), Ok(("", ShellData::FilePath("valid/**/file\\ path".to_string()))));
+        assert_eq!(parse_file_path("partial/&&/filepath"), Ok(("&&/filepath", ShellData::FilePath("partial/".to_string()))));
+    }
+
+    #[test]
     fn test_int() {
         assert_eq!(parse_int("5"), Ok(("", ShellData::Int(5))))
     }
@@ -105,6 +110,12 @@ mod tests {
     #[test]
     fn test_number_float() {
         assert_eq!(parse_number("5.0"), Ok(("", ShellData::Float(5.0))))
+    }
+
+    #[test]
+    fn test_octal() {
+        assert_eq!(parse_octal("777"), Ok(("", ShellData::Int(0o777))));
+        assert_eq!(parse_octal("999"), Err(Error(ParserError::DataError(ShellType::Octal))));
     }
 
     #[test]

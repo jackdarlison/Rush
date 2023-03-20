@@ -70,7 +70,6 @@ pub(crate) fn run() {
                             match command_result {
                                 Ok(sr) => {
                                     if let Some(s) = format_shell_result(sr) {
-                                        info!("{}", s);
                                         print_below_current(&s, false);
                                     }
                                 },

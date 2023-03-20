@@ -2,6 +2,8 @@ use std::io::stdout;
 
 use crossterm::{event::{KeyEvent, KeyModifiers, KeyEventState, KeyCode}, style::Print, cursor::{MoveLeft, MoveRight, SavePosition, RestorePosition}};
 
+use crate::helpers::completion::complete_command;
+
 use super::{session::Session, engine::{SideEffects}, output::print_below_current, formatting::{format_description, format_options, format_arguments}, command_buffer::CommandBuffer};
 
 
@@ -32,6 +34,13 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             ..
         } => {
             side_effects = SideEffects::ExecuteCommand;
+        },
+        KeyEvent {
+            code: KeyCode::Char(' '),
+            modifiers: KeyModifiers::CONTROL,
+            ..
+        } => {
+            print_below_current(&format!("{:?}", complete_command("".to_string())), true);
         },
         KeyEvent {
             code: KeyCode::Char('d'),

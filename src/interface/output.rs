@@ -38,7 +38,7 @@ pub fn print_prompt(prompt: &str) {
 }
 
 pub fn print_below_current(input: &str, restore_pos: bool) {
-    let so = 1;
+    let so = 2;
     if cursor_to_bottom_distance() < get_height_of_text(input) + so {
         scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance() + so));
     }
