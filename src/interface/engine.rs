@@ -1,6 +1,7 @@
 use std::{io::stdout, cmp};
 
 use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor::{self, MoveLeft, MoveRight}};
+use log::{error, info};
 
 use crate::{parser::commands::parse_command, helpers::completion::complete_command};
 
@@ -45,8 +46,12 @@ pub(crate) fn run() {
 
             //process event
             match side_effects {
-                SideEffects::BreakProgram => break 'shell_loop,
+                SideEffects::BreakProgram => {
+                    info!("breaking program");
+                    break 'shell_loop
+                },
                 SideEffects::BreakCommand => {
+                    info!("Breaking command");
                     autocomplete_buffer.clear();
                     autocomplete_index = 0;
                     break 'command_loop
@@ -56,6 +61,7 @@ pub(crate) fn run() {
                     autocomplete_index = 0;
                     if cursor_to_bottom_distance() < 2 { scroll_off(2) }
 
+                    info!("Parsing for execution: {}", command_buffer.str_contents());
                     let result = parse_command(command_buffer.str_contents());
 
                     match result {
@@ -64,15 +70,18 @@ pub(crate) fn run() {
                             match command_result {
                                 Ok(sr) => {
                                     if let Some(s) = format_shell_result(sr) {
+                                        info!("{}", s);
                                         print_below_current(&s, false);
                                     }
                                 },
                                 Err(se) => {
+                                    error!("{}", se);
                                     print_below_current(&format!("{}", se), false)
                                 }
                             }
                         },
                         Err(e) => {
+                            error!("{}", e);
                             print_below_current(&format!("{}", e), false)
                         }
                     }
@@ -80,6 +89,7 @@ pub(crate) fn run() {
                 },
                 SideEffects::AutoComplete => {
                     if command_buffer.get_word_index() == 0 {
+                        info!("Running autocomplete");
                         if autocomplete_buffer.is_empty() {
                             let word = command_buffer.get_current_word().0;
                             autocomplete_buffer.extend(complete_command(word));
