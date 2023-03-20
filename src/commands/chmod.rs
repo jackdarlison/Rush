@@ -1,15 +1,17 @@
-
+use std::any::TypeId;
 use std::{fs::{Permissions, set_permissions}, path::PathBuf, os::unix::prelude::PermissionsExt};
 
 use log::{info, error};
 
-use crate::architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData};
+use crate::{architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData}, get_type};
 
 
 #[derive(Debug, Clone)]
 pub struct Chmod {}
 
 impl Command for Chmod {
+    get_type!();
+
     fn name(&self) -> &str {
         "chmod"
     }

@@ -6,6 +6,8 @@ use crate::interface::engine;
 #[macro_use]
 extern crate crossterm;
 
+extern crate proc_macro;
+
 mod architecture;
 mod parser;
 mod commands;

@@ -7,6 +7,7 @@ use crate::interface::session::Session;
 use super::ast::AstCommand;
 use super::shell_data::ShellData;
 use core::fmt::Debug;
+use std::any::TypeId;
 
 //trait for built in commands
 pub trait Command: Debug + DynClone {
@@ -21,8 +22,9 @@ pub trait Command: Debug + DynClone {
 
     fn run(&self, session: &mut Session, options: Vec<(String, Option<ShellData>)>, arguments: Vec<ShellData>) -> Result<ShellResult, ShellError>;
 
+    //Used to make types comapareable
+    fn get_type(&self) -> TypeId;
 }
-
 dyn_clone::clone_trait_object!(Command);
 
 #[derive(Debug, Clone)]

@@ -1,6 +1,6 @@
 use std::{path::PathBuf, time::{SystemTime, UNIX_EPOCH}, fmt, alloc::System, fs::Metadata};
-
-use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}, helpers::file_system::{hidden, name}};
+use std::any::TypeId;
+use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}, helpers::file_system::{hidden, name}, get_type};
 
 extern crate chrono;
 extern crate glob;
@@ -11,6 +11,7 @@ use glob::{glob, MatchOptions, glob_with, Paths};
 pub(crate) struct Ls {}
 
 impl Command for Ls {
+    get_type!();
 
     fn name(&self) -> &str {
         "ls"
@@ -43,13 +44,6 @@ impl Command for Ls {
                 data: None,
                 required: false,
             },
-            CommandOption {
-                name: "test",
-                short_name: None,
-                description: "Test data options",
-                data: Some(ShellType::Any),
-                required: false
-            }
         ]
     }
 

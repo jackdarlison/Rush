@@ -11,6 +11,13 @@ macro_rules! convert_parser_error {
                         Error(ParserError::DataError($data_type))
                     }
                 },
+                Failure(ParserError::Nom(i, _ek)) => {
+                    if i.is_empty() {
+                        Failure(ParserError::Incomplete)
+                    } else {
+                        Failure(ParserError::DataError($data_type))
+                    } 
+                },
                 e => e,
             }
         })

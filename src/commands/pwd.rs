@@ -1,10 +1,12 @@
-use crate::{architecture::{command::Command, shell_data::ShellData, shell_result::ShellResult, shell_error::ShellError, ast::AstCommand}, interface::session::Session};
-
+use crate::{architecture::{command::Command, shell_data::ShellData, shell_result::ShellResult, shell_error::ShellError, ast::AstCommand}, interface::session::Session, get_type};
+use std::any::TypeId;
 
 #[derive(Debug, Clone)]
 pub struct Pwd {}
 
 impl Command for Pwd {
+    get_type!();
+
     fn name(&self) -> &str {
         "pwd"
     }

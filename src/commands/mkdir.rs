@@ -1,14 +1,16 @@
 use std::fs::create_dir_all;
-
+use std::any::TypeId;
 use log::info;
 
-use crate::architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_error::ShellError, shell_result::ShellResult, shell_data::ShellData};
+use crate::{architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_error::ShellError, shell_result::ShellResult, shell_data::ShellData}, get_type};
 
 
 #[derive(Debug, Clone)]
 pub struct Mkdir {}
 
 impl Command for Mkdir {
+    get_type!();
+
     fn name(&self) -> &str {
         "mkdir"
     }

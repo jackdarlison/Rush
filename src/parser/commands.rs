@@ -133,28 +133,33 @@ fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<
 #[cfg(test)]
 mod tests {
 
-    use crate::commands::ls::Ls;
+    use crate::{commands::{ls::Ls, chmod::Chmod}, architecture::shell_type::ShellType};
 
     use super::*;
 
     #[test]
-    fn test_command_name() {
-    }
-
-    #[test]
     fn test_command_parser() {
-        println!("{:?}", parse_command("ls -a"));
-
-        assert!(1 == 1)
+        let expteced_ls = Ok(("", AstCommand { command: Box::new(Ls {}), options: vec![("all".to_string(), None)], arguments: vec![ShellData::FilePath("/Users".to_string())] }));
+        assert_eq!(parse_command("ls -a /Users"), expteced_ls);
+        let expected_e = Err(Failure(ParserError::CommandError("invalid is not a known command".to_string())));
+        assert_eq!(parse_command("invalid --option arg"), expected_e);
     }
 
     #[test]
     fn test_options_parser() {
-        println!("{:?}", parse_options("", Box::new(Ls {})))
+        let expected_ls = Ok(("", vec![("all".to_string(), None), ("long".to_string(), None)]));
+        assert_eq!(parse_options("-a --long", Box::new(Ls {})), expected_ls);
+        let expected_ls_error = Err(Failure(ParserError::OptionError("invalid is not a valid option for ls".to_string())));
+        assert_eq!(parse_options("--invalid", Box::new(Ls {})), expected_ls_error);
+        //TODO add test for option data (needs command which takes it)
     }
 
     #[test]
     fn test_argument_parser() {
+        let expected_ls = Ok(("", vec![ShellData::FilePath("/Users".to_string())]));
+        assert_eq!(parse_arguments("/Users", Box::new(Ls {})), expected_ls);
+        let expected_chmod_error = Err(Error(ParserError::DataError(ShellType::Octal)));
+        assert_eq!(parse_arguments("invalid file/path", Box::new(Chmod {})), expected_chmod_error);
     }
 
 }

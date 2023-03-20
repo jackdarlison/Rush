@@ -1,15 +1,15 @@
-use std::{vec, path::PathBuf};
+use std::{vec, path::PathBuf, any::TypeId};
 
 use log::info;
 
-use crate::{architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, ast::AstCommand, shell_data::ShellData}, interface::session::Session, helpers::file_system::name};
-
-
+use crate::{architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, ast::AstCommand, shell_data::ShellData}, interface::session::Session, helpers::file_system::name, get_type};
 
 #[derive(Debug, Clone)]
 pub struct Cd {}
 
 impl Command for Cd {
+    get_type!();
+
     fn name(&self) -> &str {
         "cd"
     }

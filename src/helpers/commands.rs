@@ -1,5 +1,15 @@
 use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod, ln::Ln}};
 
+#[macro_export]
+macro_rules! get_type {
+    () => {
+        fn get_type(&self) -> std::any::TypeId {
+            TypeId::of::<Self>()
+        }
+    };
+}
+
+
 pub fn commands() -> Vec<Box<dyn Command>> {
     vec![
         Box::new(Ls {}),

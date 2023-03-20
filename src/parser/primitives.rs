@@ -7,7 +7,7 @@ use nom::{
     number::complete::float,
     bytes::complete::tag,
     multi::{fold_many1, fold_many0, many_till},
-    combinator::not, Err::Error,
+    combinator::not, Err::{Error, Failure},
     Err, sequence::delimited,
 };
 

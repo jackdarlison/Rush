@@ -1,13 +1,16 @@
 use std::{vec, os::unix::fs::symlink, fs::hard_link};
-
+use std::any::TypeId;
 use log::{info, error};
 
 use crate::architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType, shell_error::ShellError, shell_result::ShellResult, shell_data::ShellData};
+use crate::get_type;
 
 #[derive(Debug, Clone)]
 pub struct Ln {}
 
 impl Command for Ln {
+    get_type!();
+
     fn name(&self) -> &str {
         "ln"
     }
