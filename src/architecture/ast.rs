@@ -10,7 +10,15 @@ pub struct AstProgram {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub enum AstCompound {
+    And(Box<AstCompound>, AstCommand),
+    Or(Box<AstCompound>, AstCommand),
+    List(Box<AstCompound>, AstCommand),
+    Command(AstCommand),
+}
+
+#[derive(Debug, Clone)]
 pub struct AstCommand {
     pub command: Box<dyn Command>,
     pub options: Vec<(String, Option<ShellData>)>,
