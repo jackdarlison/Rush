@@ -2,13 +2,13 @@ use nom::{IResult, branch::alt, sequence::tuple, bytes::complete::tag, character
 
 use crate::architecture::ast::AstCompound;
 
-use super::{parser_error::ParserError, commands::parse_command};
+use super::{parser_error::ParserError, program::parse_statement};
 
 
 pub fn parse_compound(input: &str) -> IResult<&str, AstCompound, ParserError<&str>> {
-    let (rest, command) = parse_command(input)?;
-    fold_many1(tuple((alt((tag("&&"), tag("||"), tag(";"))), multispace0, parse_command)),
-    move || AstCompound::Command(command.clone()),
+    let (rest, command) = parse_statement(input)?;
+    fold_many1(tuple((alt((tag("&&"), tag("||"), tag(";"))), multispace0, parse_statement)),
+    move || AstCompound::Statement(command.clone()),
     | acc, (op, _, c) | {
         if op == "&&" {
             AstCompound::And(Box::new(acc), c)

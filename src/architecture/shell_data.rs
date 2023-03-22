@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, ops::Range};
 
 
 #[derive(Debug, Clone, PartialEq)]
@@ -9,6 +9,7 @@ pub enum ShellData {
     String(String),
     Float(f32),
     Int(i32),
+    Range(Range<i32>)
 }
 
 impl fmt::Display for ShellData {
@@ -20,6 +21,7 @@ impl fmt::Display for ShellData {
             ShellData::String(m) => write!(f, "{}", m),
             ShellData::Float(m) => write!(f, "{}", m),
             ShellData::Int(m) => write!(f, "{}", m),
+            ShellData::Range(r) => write!(f, "{}..<{}", r.start, r.end),
         }
     } 
 }

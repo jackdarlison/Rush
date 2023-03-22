@@ -1,4 +1,6 @@
 
+use std::ops::Range;
+
 use nom::{
     IResult, 
     combinator::map,
@@ -7,7 +9,7 @@ use nom::{
     number::complete::float,
     bytes::complete::tag,
     multi::{fold_many1, many_till}, Err::{Error, Failure},
-    Err,
+    Err, sequence::tuple,
 };
 
 use crate::{architecture::{shell_data::ShellData, shell_type::ShellType}, convert_parser_error};
@@ -92,6 +94,15 @@ pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> 
     Ok((rest, ShellData::String(string)))
 }
 
+pub fn parse_range(input: &str) -> IResult<&str, Range<i32>, ParserError<&str>> {
+    let (rest, (s, _, inc, e)) = tuple((i32, tag(".."), alt((tag("<"), tag("="))), i32))(input)?;
+    if inc == "=" {
+        Ok((rest, Range {start: s, end: e+1}))
+    } else {
+        Ok((rest, Range {start: s, end: e}))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,5 +132,11 @@ mod tests {
     #[test]
     fn test_string() {
         assert_eq!(parse_string("\"test string 123$\""), Ok(("", ShellData::String(String::from("test string 123$")))))
+    }
+
+    #[test]
+    fn test_range() {
+        assert_eq!(parse_range("10..<20"), Ok(("", Range {start: 10, end: 20})));
+        assert_eq!(parse_range("10..=20"), Ok(("", Range {start: 10, end: 21})));
     }
 }

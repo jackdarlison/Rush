@@ -1,21 +1,31 @@
-use std::any::TypeId;
+use std::{any::TypeId, ops::Range};
 
 use super::{shell_data::ShellData, command::Command};
 
 
 #[derive(Debug)]
-pub struct AstProgram {
+pub enum AstProgram {
+    Program(Box<AstCompound>)
+}
 
-    command: AstCommand,
+#[derive(Debug, Clone)]
+pub enum AstStatement {
+    ControlFlow(AstControlFlow),
+    Command(AstCommand),
+}
 
+#[derive(Debug, Clone)]
+pub enum AstControlFlow {
+    If,
+    For {var: String, range: Range<i32>, body: Box<AstCompound>}
 }
 
 #[derive(Debug, Clone)]
 pub enum AstCompound {
-    And(Box<AstCompound>, AstCommand),
-    Or(Box<AstCompound>, AstCommand),
-    List(Box<AstCompound>, AstCommand),
-    Command(AstCommand),
+    And(Box<AstCompound>, AstStatement),
+    Or(Box<AstCompound>, AstStatement),
+    List(Box<AstCompound>, AstStatement),
+    Statement(AstStatement),
 }
 
 #[derive(Debug, Clone)]
