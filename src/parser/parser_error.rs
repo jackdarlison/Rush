@@ -21,7 +21,7 @@ impl<I> ParseError<I> for ParserError<I> {
         ParserError::Nom(input, kind)
     }
 
-    fn append(input: I, kind: ErrorKind, other: Self) -> Self {
+    fn append(_input: I, _kind: ErrorKind, other: Self) -> Self {
         other
     }
 }

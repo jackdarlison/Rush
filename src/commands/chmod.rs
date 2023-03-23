@@ -1,5 +1,5 @@
 use std::any::TypeId;
-use std::{fs::{Permissions, set_permissions}, path::PathBuf, os::unix::prelude::PermissionsExt};
+use std::{fs::set_permissions, path::PathBuf, os::unix::prelude::PermissionsExt};
 
 use log::{info, error};
 

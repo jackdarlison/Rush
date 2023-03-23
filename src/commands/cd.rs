@@ -2,7 +2,7 @@ use std::{vec, path::PathBuf, any::TypeId};
 
 use log::info;
 
-use crate::{architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, ast::AstCommand, shell_data::ShellData}, interface::session::Session, helpers::file_system::name, get_type};
+use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData}, interface::session::Session, helpers::file_system::name, get_type};
 
 #[derive(Debug, Clone)]
 pub struct Cd {}

@@ -1,4 +1,4 @@
-use crate::{architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod, ln::Ln}};
+use crate::{architecture::{command::{Command, CommandOption}}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod, ln::Ln}};
 
 #[macro_export]
 macro_rules! get_type {

@@ -1,11 +1,11 @@
-use std::{path::PathBuf, time::{SystemTime, UNIX_EPOCH}, fmt, alloc::System, fs::Metadata};
+use std::{path::PathBuf, time::{SystemTime, UNIX_EPOCH}, fs::Metadata};
 use std::any::TypeId;
 use crate::{architecture::{command::*, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstCommand}, interface::session::{Session, self}, helpers::file_system::{hidden, name}, get_type};
 
 extern crate chrono;
 extern crate glob;
 use chrono::NaiveDateTime;
-use glob::{glob, MatchOptions, glob_with, Paths};
+use glob::{MatchOptions, glob_with};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Ls {}

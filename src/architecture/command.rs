@@ -4,7 +4,6 @@ use crate::architecture::shell_type::ShellType;
 use crate::architecture::shell_error::ShellError;
 use crate::architecture::shell_result::ShellResult;
 use crate::interface::session::Session;
-use super::ast::AstCommand;
 use super::shell_data::ShellData;
 use core::fmt::Debug;
 use std::any::TypeId;

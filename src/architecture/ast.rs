@@ -1,4 +1,4 @@
-use std::{any::TypeId, ops::Range};
+use std::ops::Range;
 
 use super::{shell_data::ShellData, command::Command};
 
