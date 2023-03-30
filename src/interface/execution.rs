@@ -35,10 +35,11 @@ pub fn execute_control_flow(input: AstControlFlow, session: &mut Session) -> Res
             }
             return res
         },
-        AstControlFlow::If => todo!(),
-        AstControlFlow::While => todo!(),
-        AstControlFlow::Until => todo!(),
-        AstControlFlow::Switch => todo!(),
+        // AstControlFlow::If => todo!(),
+        // AstControlFlow::While => todo!(),
+        // AstControlFlow::Until => todo!(),
+        // AstControlFlow::Switch => todo!(),
+        _ => Err(ShellError::UnknownError("Control flow type not yet implemented".to_string()))
     }
 }
 

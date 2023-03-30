@@ -59,8 +59,12 @@ pub(crate) fn run() {
                 SideEffects::ExecuteCommand => {
                     autocomplete_buffer.clear();
                     autocomplete_index = 0;
-                    if cursor_to_bottom_distance() < 2 { scroll_off(2) }
 
+                    if command_buffer.contents.trim().is_empty() {
+                        break 'command_loop
+                    }
+
+                    if cursor_to_bottom_distance() < 2 { scroll_off(2) }
                     info!("Parsing for execution: {}", command_buffer.str_contents());
                     let result = parse_command(command_buffer.str_contents());
 
