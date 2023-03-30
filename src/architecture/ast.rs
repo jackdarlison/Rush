@@ -3,24 +3,27 @@ use std::ops::Range;
 use super::{shell_data::ShellData, command::Command};
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AstProgram {
     Program(Box<AstCompound>)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AstStatement {
     ControlFlow(AstControlFlow),
     Command(AstCommand),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AstControlFlow {
+    For {var: String, range: Range<i32>, body: Box<AstCompound>},
     If,
-    For {var: String, range: Range<i32>, body: Box<AstCompound>}
+    While, 
+    Until,
+    Switch,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AstCompound {
     And(Box<AstCompound>, AstStatement),
     Or(Box<AstCompound>, AstStatement),
