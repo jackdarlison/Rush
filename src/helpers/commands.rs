@@ -1,4 +1,4 @@
-use crate::{architecture::{command::{Command, CommandOption}}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod, ln::Ln}};
+use crate::{architecture::{command::{Command, CommandOption}}, commands::{echo::Echo, ls::Ls, pwd::Pwd, cd::Cd, mkdir::Mkdir, chmod::Chmod, ln::Ln, r#true::True, r#false::False}};
 
 #[macro_export]
 macro_rules! get_type {
@@ -19,6 +19,8 @@ pub fn commands() -> Vec<Box<dyn Command>> {
         Box::new(Mkdir {}),
         Box::new(Chmod {}),
         Box::new(Ln {}),
+        Box::new(True {}),
+        Box::new(False {}),
     ]
 }
 

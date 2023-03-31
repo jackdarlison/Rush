@@ -3,7 +3,7 @@ use std::{io::stdout, cmp};
 use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor::{self, MoveLeft, MoveRight}};
 use log::{error, info};
 
-use crate::{parser::commands::parse_command, helpers::completion::complete_command};
+use crate::{parser::{commands::parse_command, program::parse_program}, helpers::completion::complete_command, interface::{execution::execute_program, formatting::format_shell_results}, architecture::shell_error::ShellError};
 
 use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current, refresh_buffer, print_prompt}, formatting::{format_hints, format_shell_result}, command_buffer::CommandBuffer};
 
@@ -60,34 +60,41 @@ pub(crate) fn run() {
                     autocomplete_buffer.clear();
                     autocomplete_index = 0;
 
+                    // No output on empty command buffer (wanted by student evaluation)
                     if command_buffer.contents.trim().is_empty() {
                         break 'command_loop
                     }
 
                     if cursor_to_bottom_distance() < 2 { scroll_off(2) }
                     info!("Parsing for execution: {}", command_buffer.str_contents());
-                    let result = parse_command(command_buffer.str_contents());
-
-                    match result {
-                        Ok((_, ast)) => {
-                            let command_result = ast.command.run(&mut session, ast.options, ast.arguments);
-                            match command_result {
-                                Ok(sr) => {
-                                    if let Some(s) = format_shell_result(sr) {
-                                        print_below_current(&s, false);
+                    match parse_program(command_buffer.str_contents()) {
+                        Ok((rest, parse_result)) => {
+                            info!("Left over from parsing: {}", rest);
+                            info!("AST generated: {:?}", parse_result);
+                            // execute
+                            match execute_program(parse_result, &mut session) {
+                                Ok(program_result) => {
+                                    info!("Results: {:?}", program_result);
+                                    if let Some(program_output) = format_shell_results(program_result) {
+                                        print_below_current(&program_output, false)
                                     }
                                 },
-                                Err(se) => {
-                                    error!("{}", se);
-                                    print_below_current(&format!("{}", se), false)
-                                }
+                                Err(e) => {
+                                    if let ShellError::None = e {
+                                        error!("Error None");
+                                    } else {
+                                        error!("Execution error: {}", e);
+                                        print_below_current(&format!("Execution error: {}", e), false);
+                                    }
+                                },
                             }
                         },
                         Err(e) => {
-                            error!("{}", e);
-                            print_below_current(&format!("{}", e), false)
+                            error!("Parser error: {}", e);
+                            print_below_current(&format!("Parser error: {}", e), false)
                         }
                     }
+
                     break 'command_loop;
                 },
                 SideEffects::AutoComplete => {

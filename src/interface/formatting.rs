@@ -102,20 +102,27 @@ pub fn format_arguments(buffer: &String) -> String {
     String::new()
 }
 
+pub fn format_shell_results(results: Vec<ShellResult>) -> Option<String> {
+    if results.is_empty() { return None }
+    let mut output = String::new();
+    for r in results {
+        match format_shell_result(r) {
+            Some(s) => {
+                output.push_str(&s);
+                output.push_str("\r\n");
+            },
+            None => (),
+        }
+    }
+    if output.is_empty() { return None;}
+    output.pop();
+    output.pop();
+    Some(output)
+}
+
 pub fn format_shell_result(result: ShellResult) -> Option<String> {
     match result {
         ShellResult::None => None,
         ShellResult::Value(v) => Some(format!("{}", v)),
-        ShellResult::List(l) => {
-            if l.is_empty() { return None }
-            let mut output = l.into_iter().fold(String::new(), |mut acc, s| {
-                acc.push_str(&format!("{}\r\n", s));
-                acc
-            });
-            //remove final return + newline
-            output.pop();
-            output.pop();
-            Some(output)
-        }
     }
 }
