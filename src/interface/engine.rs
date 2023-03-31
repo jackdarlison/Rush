@@ -1,6 +1,6 @@
 use std::{io::stdout, cmp};
 
-use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize}, event::{read, Event}, cursor::{self, MoveLeft, MoveRight}};
+use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize, Colored, Colors}, event::{read, Event}, cursor::{self, MoveLeft, MoveRight}};
 use log::{error, info};
 
 use crate::{parser::{commands::parse_command, program::parse_program}, helpers::completion::complete_command, interface::{execution::execute_program, formatting::format_shell_results}, architecture::shell_error::ShellError};
@@ -14,6 +14,7 @@ pub(crate) fn run() {
    let mut autocomplete_index: usize = 0;
    let mut session = Session::new();
    let mut prompt: String = format!("{} >> ", &session.pwd);
+   let mut prompt_colour: Color = Color::Green;
 
    //TODO handle errors?
    enable_raw_mode().unwrap();
@@ -31,7 +32,11 @@ pub(crate) fn run() {
         //prompt, clear buffer..
         prompt = format!("{} >> ", &session.pwd);
         command_buffer.clear();
-        print_prompt(&prompt.clone());
+        prompt_colour = match session.last_result {
+            Ok(_) => Color::Green,
+            Err(_) => Color::Red,
+        };
+        print_prompt(&prompt.clone(), prompt_colour);
 
         //start command loop
         'command_loop: loop {

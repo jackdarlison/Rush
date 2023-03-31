@@ -1,4 +1,5 @@
 use std::{path::PathBuf, fs::canonicalize};
+use std::fs;
 
 
 pub fn name(path: &PathBuf) -> String {
@@ -15,4 +16,13 @@ pub fn hidden(path: &PathBuf) -> bool {
 
 pub fn components(path: &PathBuf) -> Vec<String> {
     path.to_str().unwrap_or("").split("/").map(|s| String::from(s)).collect()
+}
+
+pub fn read_file_contents(path: &PathBuf) -> std::io::Result<String> {
+    fs::read_to_string(path).map(preprocess)
+}
+
+fn preprocess(file_contents: String) -> String {
+    //Any preprocessing goes in here
+    file_contents
 }

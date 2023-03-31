@@ -7,3 +7,4 @@ pub mod chmod;
 pub mod ln;
 pub mod r#false;
 pub mod r#true;
+pub mod rush;

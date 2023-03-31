@@ -12,7 +12,7 @@ pub enum ParserError<I> {
     ArgumentError(String),
     DataError(ShellType),
     Incomplete,
-    Unknown,
+    Unknown(String),
     Nom(I, ErrorKind),
 }
 
@@ -34,7 +34,7 @@ impl<I: std::fmt::Debug> fmt::Display for ParserError<I> {
             ParserError::ArgumentError(a) => write!(f, "{}", a),
             ParserError::DataError(t) => write!(f, "Invalid data type, expected {:?}", t),
             ParserError::Incomplete => write!(f, "Incomplete parsing"),
-            ParserError::Unknown => write!(f, "An unknown error has occured!"),
+            ParserError::Unknown(s) => write!(f, "An unknown error has occured: {}", s),
             nom => write!(f, "{:?}", nom),
         }
     }

@@ -33,9 +33,11 @@ pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, 
 pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IResult<&str, ShellData, ParserError<&str>> {
     move |input| {
         for ty in &data_types {
-            return parse_shell_data(*ty)(input)
+            if let Ok(r) = parse_shell_data(*ty)(input) {
+                return Ok(r)
+            }
         }
-        Err(Error(ParserError::Unknown))
+        Err(Error(ParserError::Unknown(format!("\"{}\" does not parse for {:?}", input, data_types))))
     }
 }
 

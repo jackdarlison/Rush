@@ -26,14 +26,14 @@ pub fn get_height_of_text(input: &str) -> u16 {
     text_width / term_width
 }
 
-pub fn print_prompt(prompt: &str) {
+pub fn print_prompt(prompt: &str, colour: Color) {
     if cursor_to_bottom_distance() < 1 {
         scroll_off(1);
     }
     execute!(
         stdout(),
         cursor::MoveToNextLine(1),
-        PrintStyledContent(prompt.with(Color::Green)),
+        PrintStyledContent(prompt.with(colour)),
     ).unwrap();
 }
 
