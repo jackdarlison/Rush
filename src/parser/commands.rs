@@ -4,7 +4,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag, 
     combinator::opt, 
-    character::complete::{alpha1, multispace0}, 
+    character::complete::{alpha1, space0}, 
     multi::fold_many0, 
     sequence::{pair, tuple}, 
     Err::*,
@@ -19,7 +19,7 @@ pub fn parse_valid_command(input: &str) -> IResult<&str, Result<Box<dyn Command>
 }
 
 pub fn parse_command(input: &str) -> IResult<&str, AstCommand, ParserError<&str>> {
-    let (rest, (name, _)) = pair(parse_valid_command, multispace0)(input)?;
+    let (rest, (name, _)) = pair(parse_valid_command, space0)(input)?;
     match name {
         Ok(c) => {
             let (rest, (opts, args)) = pair(
@@ -29,7 +29,7 @@ pub fn parse_command(input: &str) -> IResult<&str, AstCommand, ParserError<&str>
             Ok((rest, AstCommand {command: c, options: opts, arguments: args}))
         },
         Err(e) => {
-            Err(Failure(ParserError::CommandError(e)))
+            Err(Error(ParserError::CommandError(e)))
             //Collect vec of all arguments and create AstUnknown
         },
     }
@@ -42,7 +42,7 @@ fn parse_options_helper(command: Box<dyn Command>) -> impl Fn(&str) ->IResult<&s
 pub fn parse_options(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
 
     //parse compound options
-    let (rest, compound_opts) = opt(tuple((tag("-"), alpha1, multispace0)))(input)?;
+    let (rest, compound_opts) = opt(tuple((tag("-"), alpha1, space0)))(input)?;
     let mut opts: Vec<(String, Option<ShellData>)> = vec![];
     match compound_opts {
         Some((_, flags, _)) => {
@@ -79,13 +79,13 @@ fn parse_option_helper(command: Box<dyn Command>) -> impl FnMut(&str) -> IResult
 
 pub fn parse_option(input: &str, command: Box<dyn Command>) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
 
-    let (rest, (_, opt_name, _)) = tuple((alt((tag("--"), tag("-"))), alpha1, multispace0))(input)?;
+    let (rest, (_, opt_name, _)) = tuple((alt((tag("--"), tag("-"))), alpha1, space0))(input)?;
 
     match option_lookup(command.clone(), opt_name) {
         Some(option) => {
             match option.data {
                 Some(data_type) => {
-                    let (rest2, (data, _)) = tuple((parse_shell_data(data_type), multispace0))(rest)?;
+                    let (rest2, (data, _)) = tuple((parse_shell_data(data_type), space0))(rest)?;
                     Ok((rest2, (opt_name.to_string(), Some(data))))
                     
                 },
@@ -110,7 +110,7 @@ fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<
     let mut arguments = vec![];
 
     for arg in &required {
-        let (next_rest, (argument, _)) = tuple((parse_shell_data_many(arg.arg_type.clone()), multispace0))(rest)?;
+        let (next_rest, (argument, _)) = tuple((parse_shell_data_many(arg.arg_type.clone()), space0))(rest)?;
         arguments.push(argument);
         rest = next_rest;
     }
@@ -119,7 +119,7 @@ fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<
         None => Ok((rest, arguments)),
         Some(arg) => {
             fold_many0(
-                tuple((parse_shell_data_many(arg.arg_type), multispace0)),
+                tuple((parse_shell_data_many(arg.arg_type), space0)),
                 move || arguments.clone(),
                 |mut acc, (argument, _)| {
                     acc.push(argument);
@@ -141,7 +141,7 @@ mod tests {
     fn test_command_parser() {
         let expteced_ls = Ok(("", AstCommand { command: Box::new(Ls {}), options: vec![("all".to_string(), None)], arguments: vec![ShellData::FilePath("/Users".to_string())] }));
         assert_eq!(parse_command("ls -a /Users"), expteced_ls);
-        let expected_e = Err(Failure(ParserError::CommandError("invalid is not a known command".to_string())));
+        let expected_e = Err(Error(ParserError::CommandError("invalid is not a known command".to_string())));
         assert_eq!(parse_command("invalid --option arg"), expected_e);
     }
 
@@ -158,7 +158,7 @@ mod tests {
     fn test_argument_parser() {
         let expected_ls = Ok(("", vec![ShellData::FilePath("/Users".to_string())]));
         assert_eq!(parse_arguments("/Users", Box::new(Ls {})), expected_ls);
-        let expected_chmod_error = Err(Error(ParserError::DataError(ShellType::Octal)));
+        let expected_chmod_error = Err(Error(ParserError::DataError(vec![ShellType::Octal])));
         assert_eq!(parse_arguments("invalid file/path", Box::new(Chmod {})), expected_chmod_error);
     }
 

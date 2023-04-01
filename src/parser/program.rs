@@ -11,20 +11,24 @@ pub fn parse_program(input: &str) -> IResult<&str, AstProgram, ParserError<&str>
 
 pub fn parse_statement(input: &str) -> IResult<&str, AstStatement, ParserError<&str>> {
    alt((
-      map(parse_control_flow, |cf| {AstStatement::ControlFlow(cf)} ),
       map(parse_command, |c| {AstStatement::Command(c)} ),
+      map(parse_control_flow, |cf| {AstStatement::ControlFlow(cf)} ),
    ))(input)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{architecture::ast::{AstProgram, AstStatement, AstCommand}, parser::program::parse_program, commands::ls::Ls};
+    use std::ops::Range;
+
+    use crate::{architecture::ast::{AstProgram, AstStatement, AstCommand, AstCompound, AstControlFlow}, parser::program::parse_program, commands::{ls::Ls, pwd::Pwd}};
 
 
    #[test]
    fn test_program() {
       let output = AstProgram::Program(Box::new(crate::architecture::ast::AstCompound::Statement(AstStatement::Command(AstCommand { command: Box::new(Ls {}), options: vec![], arguments: vec![] }))));
-      assert_eq!(parse_program("ls"), Ok(("", output)))
+      assert_eq!(parse_program("ls"), Ok(("", output)));
+      let full = AstProgram::Program(Box::new(AstCompound::Statement(AstStatement::ControlFlow(AstControlFlow::For { var: String::from("i"), range: Range {start: 0, end: 3}, body: Box::new(AstCompound::Statement(AstStatement::Command(AstCommand { command: Box::new(Pwd {}), options: vec![], arguments: vec![] }))) }))));
+      assert_eq!(parse_program("for i in 0..<3 {\n    pwd\n}"), Ok(("", full)));
    }
 
 }

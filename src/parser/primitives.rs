@@ -32,12 +32,12 @@ pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, 
 
 pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IResult<&str, ShellData, ParserError<&str>> {
     move |input| {
-        for ty in &data_types {
-            if let Ok(r) = parse_shell_data(*ty)(input) {
+        for ty in data_types.clone() {
+            if let Ok(r) = parse_shell_data(ty)(input) {
                 return Ok(r)
             }
         }
-        Err(Error(ParserError::Unknown(format!("\"{}\" does not parse for {:?}", input, data_types))))
+        Err(Error(ParserError::DataError(data_types.clone())))
     }
 }
 
@@ -65,33 +65,33 @@ pub fn parse_file_path(input: &str) -> IResult<&str, ShellData, ParserError<&str
             acc.push_str(file_char);
             acc
          }
-    )(input), ShellType::FilePath)?;
+    )(input), vec![ShellType::FilePath])?;
     //TODO: Match glob pattern struct to check valid path
     return Ok((rest, ShellData::FilePath(filepath)))
 }
 
 pub fn parse_int(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    convert_parser_error!(map(i32, |v| ShellData::Int(v))(input), ShellType::Int)
+    convert_parser_error!(map(i32, |v| ShellData::Int(v))(input), vec![ShellType::Int])
 }
 
 pub fn parse_float(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    convert_parser_error!(map(float, |v| ShellData::Float(v))(input), ShellType::Float)
+    convert_parser_error!(map(float, |v| ShellData::Float(v))(input), vec![ShellType::Float])
 }
 
 pub fn parse_number(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     //Decide if number is float or not
-    convert_parser_error!(parse_float(input), ShellType::Float)
+    convert_parser_error!(parse_float(input), vec![ShellType::Float])
 }
 
 pub fn parse_octal(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     convert_parser_error!(map(oct_digit1, |v| {
         ShellData::Int(i32::from_str_radix(v, 8).unwrap())
-    })(input), ShellType::Octal)
+    })(input), vec![ShellType::Octal])
 }
 
 pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    let (rest, _) = convert_parser_error!(char('"')(input), ShellType::String)?;
-    let (rest, (chars, _)) = convert_parser_error!(many_till(anychar, char('"'))(rest), ShellType::String)?;
+    let (rest, _) = convert_parser_error!(char('"')(input), vec![ShellType::String])?;
+    let (rest, (chars, _)) = convert_parser_error!(many_till(anychar, char('"'))(rest), vec![ShellType::String])?;
     let string = chars.iter().fold(String::new(), |mut acc, c| {acc.push(*c); acc});
     Ok((rest, ShellData::String(string)))
 }
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn test_octal() {
         assert_eq!(parse_octal("777"), Ok(("", ShellData::Int(0o777))));
-        assert_eq!(parse_octal("999"), Err(Error(ParserError::DataError(ShellType::Octal))));
+        assert_eq!(parse_octal("999"), Err(Error(ParserError::DataError(vec![ShellType::Octal]))));
     }
 
     #[test]

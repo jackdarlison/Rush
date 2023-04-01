@@ -1,4 +1,6 @@
 use std::{any::TypeId, path::PathBuf};
+use log::info;
+
 use crate::{get_type, architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData, ast::AstProgram}, helpers::file_system::read_file_contents, parser::program::parse_program, interface::{execution::execute_program, formatting::format_shell_results}};
 
 
@@ -51,8 +53,13 @@ impl Command for Rush {
             _ => return Err(ShellError::InputError("Invalid data type given".to_string()))
         };
 
+        info!("Parsing for execution: {}", script);
+
         let parse_result = match parse_program(&script) {
-            Ok((_, ast)) => ast,
+            Ok((rest, ast)) => {
+                info!("parse result: {:?} and remaining: {}", ast, rest);
+                ast
+            },
             Err(e) => return Err(ShellError::CommandError(format!("Cannot parse command: {}", e))),
         };
 
@@ -60,6 +67,8 @@ impl Command for Rush {
             Ok(rs) => format_shell_results(rs),
             Err(e) => return Err(ShellError::CommandError(format!("Cannot execute program: {}", e))),
         };
+
+        info!("Rush command results: {:?}", results);
 
         match results {
             None => Ok(ShellResult::None),
