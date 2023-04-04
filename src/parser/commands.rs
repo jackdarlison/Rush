@@ -86,10 +86,10 @@ pub fn parse_option(input: &str, command: Box<dyn Command>) -> IResult<&str, (St
             match option.data {
                 Some(data_type) => {
                     let (rest2, (data, _)) = tuple((parse_shell_data(data_type), space0))(rest)?;
-                    Ok((rest2, (opt_name.to_string(), Some(data))))
+                    Ok((rest2, (option.name.to_string(), Some(data))))
                     
                 },
-                None => Ok((rest, (opt_name.to_string(), None))),
+                None => Ok((rest, (option.name.to_string(), None))),
             }
         },
         None => {
