@@ -1,6 +1,7 @@
 use std::{io::stdout, cmp::max};
 
 use crossterm::{terminal::{self, Clear, ClearType}, cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveRight, MoveLeft, MoveTo}, style::{PrintStyledContent, Stylize, Color, Print}};
+use log::info;
 
 use super::command_buffer::CommandBuffer;
 
@@ -21,9 +22,13 @@ pub fn cursor_to_bottom_distance() -> u16 {
 }
 
 pub fn get_height_of_text(input: &str) -> u16 {
+    let lines = input.split('\n');
     let term_width = terminal::size().unwrap_or((1, 1)).0;
-    let text_width: u16 = input.len().try_into().unwrap_or(1);
-    text_width / term_width
+    let mut height: u16 = 0;
+    for line in lines {
+        height += (line.len().try_into().unwrap_or(1) / term_width) + 1
+    }
+    height
 }
 
 pub fn print_prompt(prompt: &str, colour: Color) {
@@ -38,9 +43,8 @@ pub fn print_prompt(prompt: &str, colour: Color) {
 }
 
 pub fn print_below_current(input: &str, restore_pos: bool) {
-    let so = 2;
-    if cursor_to_bottom_distance() < get_height_of_text(input) + so {
-        scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance() + so));
+    if cursor_to_bottom_distance() < get_height_of_text(input) {
+        scroll_off(max(0, get_height_of_text(input) - cursor_to_bottom_distance()));
     }
     execute!(
         stdout(),
