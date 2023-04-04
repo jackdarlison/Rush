@@ -1,6 +1,7 @@
 use std::io::stdout;
 
 use crossterm::{event::{KeyEvent, KeyModifiers, KeyEventState, KeyCode}, style::Print, cursor::{MoveLeft, MoveRight, SavePosition, RestorePosition}};
+use log::info;
 
 use crate::helpers::completion::complete_command;
 
@@ -41,6 +42,14 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             ..
         } => {
             print_below_current(&format!("{:?}", complete_command("".to_string())), true);
+        },
+        KeyEvent {
+            code: KeyCode::Char('k'),
+            modifiers: KeyModifiers::CONTROL,
+            ..
+        } => {
+            info!("{}", buffer.get_context_and_after());
+            print_below_current(&format!("{:?}", buffer.get_context_and_after()), true);
         },
         KeyEvent {
             code: KeyCode::Char('d'),

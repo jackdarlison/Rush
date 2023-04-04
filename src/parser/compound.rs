@@ -22,7 +22,7 @@ pub fn parse_compound(input: &str) -> IResult<&str, AstCompound, ParserError<&st
 
 #[cfg(test)]
 mod tests {
-    use std::{arch::x86_64::_mm_add_ss, ops::Range};
+    use std::{ops::Range};
 
     use crate::{architecture::{ast::{AstStatement, AstCommand, AstControlFlow}, shell_data::ShellData}, commands::{ls::Ls, pwd::Pwd, echo::Echo}};
 

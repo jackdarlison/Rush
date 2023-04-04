@@ -102,7 +102,7 @@ pub fn parse_arguments_helper(command: Box<dyn Command>) -> impl Fn(&str) ->IRes
     move |input| {parse_arguments(input, command.clone())}
 } 
 
-fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<ShellData>, ParserError<&str>> {
+pub fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<ShellData>, ParserError<&str>> {
     let required = command.req_arguments();
     let list = command.list_argument();
 

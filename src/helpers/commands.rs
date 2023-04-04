@@ -30,6 +30,16 @@ pub fn command_lookup(command: &str) -> Result<Box<dyn Command>, String> {
         .ok_or(format!("{} is not a known command", command))
 }
 
+pub fn format_argument_names(command: &Box<dyn Command>) -> String {
+    let mut args = command.req_arguments().iter().fold(String::new(), |mut acc, arg| {
+        acc.push_str(arg.name);
+        acc.push_str(" ");
+        acc
+    });
+    args.pop();
+    args
+}
+
 pub fn option_lookup(command: Box<dyn Command>, option: &str) -> Option<CommandOption> {
     command.options().into_iter().find(|o| o.name == option || o.short_name == Some(option))
 }

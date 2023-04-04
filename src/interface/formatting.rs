@@ -1,54 +1,75 @@
 use std::io::stdout;
 
-use crossterm::terminal::{Clear, ClearType};
-use nom::{sequence::pair, character::complete::multispace0};
+use crossterm::{terminal::{Clear, ClearType}, style::Color};
+use log::error;
+use nom::{sequence::pair, character::complete::{multispace0, space0}};
 
-use crate::{parser::commands::{parse_command, parse_valid_command}, architecture::{shell_result::ShellResult, shell_error::ShellError}};
+use crate::{parser::commands::{parse_command, parse_valid_command, parse_options, parse_arguments}, architecture::{shell_result::ShellResult, shell_error::ShellError}, helpers::commands::{format_argument_names}};
 
-pub fn format_hints(buffer: &String) -> String {
-    if let Ok((_rest, (command, space))) = pair(parse_valid_command, multispace0)(buffer.as_str()) {
-        //only display hints if theres a space after a command
-        if !space.starts_with(" ") { 
-            execute!(stdout(), Clear(ClearType::UntilNewLine)).unwrap();
-            return String::new();
-        }
+pub fn format_hints(buffer: &String) -> (String, Color) {
+    if let Ok((rest, (command, _))) = pair(parse_valid_command, space0)(buffer.as_str()) {
         match command {
             Ok(c) => {
-                let mut opts = String::new();
-                let mut req_args = String::new();
-                let mut list_arg = String::new();
-                match parse_command(buffer.as_str()) {
-                    Ok((_, ast)) => {
-                        if ast.arguments.len() == 0 {
-                            //If no parsed arguments display args spec
-                            req_args = c.req_arguments().iter().fold( req_args,|mut acc, arg| {
-                                acc.push_str(" ");
-                                acc.push_str(arg.name);
-                                acc
-                            });
-                            if let Some(arg) = c.list_argument() {
-                                list_arg.push(' ');
-                                list_arg.push_str(arg.name);
-                                list_arg.push_str("..")
+                let mut s_opts = String::new();
+                let mut s_req_args = String::new();
+                let mut s_list_arg = String::new();
+                if rest.len() == 0 {
+                    s_opts = format!("options.. ");
+                    s_req_args = format_argument_names(&c);
+                    if let Some(list_arg) = c.list_argument() {
+                        s_list_arg = format!(" {}..", list_arg.name);
+                    }
+                } else {
+                    match parse_options(rest, c.clone()) {
+                        Ok((o_rest, opts)) => {
+                            match parse_arguments(o_rest, c.clone()) {
+                                Ok((a_rest, args)) => {
+                                    // if leftover from parsing then command is finished
+                                    if a_rest.len() != 0 {
+                                        return (String::new(), Color::Red)
+                                    }
+                                    // if no args present, display required arg names
+                                    if args.len() == 0  {
+                                        s_req_args = format_argument_names(&c);
+                                        // if no options present display options hint
+                                        if opts.len() == 0 {
+                                            s_opts.push_str("options.. ")
+                                        }
+                                    } 
+                                    //display list argument name if present
+                                    if let Some(list_arg) = c.list_argument() {
+                                        s_list_arg.push_str(list_arg.name);
+                                        s_list_arg.push_str("..");
+                                    }
+                                },
+                                Err(e) => {
+                                    if o_rest.len() == 0 {
+                                        return (String::new(), Color::Red)
+                                    }
+                                    return (format!("{}", e), Color::Red);
+                                },
                             }
-                            //if also no options display options
-                            if ast.options.len() == 0 {
-                                opts.push_str("options");
+                        },
+                        Err(e) => {
+                            if rest.len() == 0 {
+                                return (String::new(), Color::Red)
                             }
+                            return (format!("{}", e), Color::Red)
                         }
-                    },
-                    Err(e) => {
-                        return format!("{}", e)
                     }
                 }
-                return format!("{}{}{}", opts, req_args, list_arg)
+                return (format!("{}{}{}", s_opts, s_req_args, s_list_arg), Color::Cyan)
             },
             Err(e) => {
-                return e
+                if buffer.split_whitespace().collect::<Vec<&str>>().len() > 1 || buffer.ends_with(" ") {
+                    return (e, Color::Red)
+                } else {
+                    return (String::new(), Color::Red)
+                }
             },
         }
     }
-    String::new()
+    (String::new(), Color::Red)
 }
 
 pub fn format_description(buffer: &String) -> String {
@@ -61,8 +82,14 @@ pub fn format_description(buffer: &String) -> String {
 pub fn format_options(buffer: &String) -> String {
     if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         let options = c.options();
-        let options_string = options.iter().fold(String::new(), |mut acc, opt| {
-            acc.push_str("- ");
+        let mut options_string = options.iter().fold(String::new(), |mut acc, opt| {
+            acc.push_str("(");
+            if opt.required {
+                acc.push_str("R");
+            } else {
+                acc.push_str("O");
+            }
+            acc.push_str(") ");
             acc.push_str(opt.name);
             acc.push_str(" (");
             if let Some(short) = opt.short_name {
@@ -75,6 +102,9 @@ pub fn format_options(buffer: &String) -> String {
             acc.push_str("\r\n");
             acc
         });
+        if options_string.len() == 0 {
+            options_string = format!("There are no options for {}", c.name());
+        }
         return options_string
     }
     String::new()
@@ -84,17 +114,25 @@ pub fn format_arguments(buffer: &String) -> String {
     if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         let mut args = String::new();
 
-        args.push_str("Required Arguments: \r\n");
+        if c.req_arguments().len() != 0 {
+            args.push_str("Required Arguments: \r\n");
+        }
         
         args.push_str(&c.req_arguments().iter().fold(String::new(), |mut acc, arg| {
-            acc.push_str(format!("{} - {}\r\n", arg.name, arg.description).as_str());
+            acc.push_str(format!("  {} - {}\r\n", arg.name, arg.description).as_str());
             acc
         }));
 
-        args.push_str(format!("----------\r\nList Argument:\r\n").as_str());
-
         if let Some(arg) = c.list_argument() {
-            args.push_str(format!("{} - {}", arg.name, arg.description).as_str());
+            if args.len() != 0 {
+                args.push_str("\r\n");
+            }
+            args.push_str(format!("List Capable Argument:\r\n").as_str());
+            args.push_str(format!("  {} - {}", arg.name, arg.description).as_str());
+        }
+
+        if args.len() == 0 {
+            args = format!("There are no arguments for {}", c.name());
         }
 
         return args;
@@ -102,7 +140,7 @@ pub fn format_arguments(buffer: &String) -> String {
     String::new()
 }
 
-pub fn format_shell_results(results: Vec<ShellResult>) -> Option<String> {
+    pub fn format_shell_results(results: Vec<ShellResult>) -> Option<String> {
     if results.is_empty() { return None }
     let mut output = String::new();
     for r in results {

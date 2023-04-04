@@ -56,7 +56,7 @@ pub fn print_below_current(input: &str, restore_pos: bool) {
     }
 }
 
-pub fn print_after_input(input: &str, rest_buffer: &str) {
+pub fn print_after_input(input: &str, rest_buffer: &str, colour: Color) {
     execute!(
         stdout(),
         SavePosition,
@@ -64,7 +64,7 @@ pub fn print_after_input(input: &str, rest_buffer: &str) {
         Print(rest_buffer),
         Print(" "),
         PrintStyledContent(
-            input.with(Color::Cyan)
+            input.with(colour)
         ),
         RestorePosition,
     ).unwrap()

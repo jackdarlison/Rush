@@ -13,8 +13,6 @@ pub(crate) fn run() {
    let mut autocomplete_buffer: Vec<&str> = vec![];
    let mut autocomplete_index: usize = 0;
    let mut session = Session::new();
-   let mut prompt: String = format!("{} >> ", &session.pwd);
-   let mut prompt_colour: Color = Color::Green;
 
    //TODO handle errors?
    enable_raw_mode().unwrap();
@@ -30,9 +28,9 @@ pub(crate) fn run() {
     //start main loop
     'shell_loop: loop {
         //prompt, clear buffer..
-        prompt = format!("{} >> ", &session.pwd);
+        let prompt = format!("{} >> ", &session.pwd);
         command_buffer.clear();
-        prompt_colour = match session.last_result {
+        let prompt_colour = match session.last_result {
             Ok(_) => Color::Green,
             Err(_) => Color::Red,
         };
@@ -118,12 +116,14 @@ pub(crate) fn run() {
                             print_below_current("No matching commands", true);
                         }
                     }
+                    let (hints, colour) = format_hints(&command_buffer.get_last_context());
+                    print_after_input(&hints, command_buffer.str_contents_after_index(), colour);
                 }
                 SideEffects::None => {
                     autocomplete_buffer.clear();
                     autocomplete_index = 0;
-                    print_after_input(format_hints(&command_buffer.contents).as_str(), command_buffer.str_contents_after_index());
-                    // print_below_current(&format!("{:?} {:?}", command_buffer, command_buffer.get_current_word()), true);
+                    let (hints, colour) = format_hints(&command_buffer.get_last_context());
+                    print_after_input(&hints, command_buffer.str_contents_after_index(), colour);
                 },
             }
         }
