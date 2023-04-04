@@ -12,7 +12,7 @@ use nom::{
     Err, sequence::tuple,
 };
 
-use crate::{architecture::{shell_data::ShellData, shell_type::ShellType}, convert_parser_error};
+use crate::{architecture::{shell_data::ShellData, shell_type::ShellType}, convert_parser_data_error};
 
 use super::parser_error::ParserError;
 
@@ -58,7 +58,7 @@ pub fn file_path_character(input: &str) -> IResult<&str, &str, ParserError<&str>
 }
 
 pub fn parse_file_path(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    let (rest, filepath) = convert_parser_error!(fold_many1(
+    let (rest, filepath) = convert_parser_data_error!(fold_many1(
         file_path_character,
         || String::new(),
          | mut acc, file_char| {
@@ -71,27 +71,27 @@ pub fn parse_file_path(input: &str) -> IResult<&str, ShellData, ParserError<&str
 }
 
 pub fn parse_int(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    convert_parser_error!(map(i32, |v| ShellData::Int(v))(input), vec![ShellType::Int])
+    convert_parser_data_error!(map(i32, |v| ShellData::Int(v))(input), vec![ShellType::Int])
 }
 
 pub fn parse_float(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    convert_parser_error!(map(float, |v| ShellData::Float(v))(input), vec![ShellType::Float])
+    convert_parser_data_error!(map(float, |v| ShellData::Float(v))(input), vec![ShellType::Float])
 }
 
 pub fn parse_number(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     //Decide if number is float or not
-    convert_parser_error!(parse_float(input), vec![ShellType::Float])
+    convert_parser_data_error!(parse_float(input), vec![ShellType::Float])
 }
 
 pub fn parse_octal(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    convert_parser_error!(map(oct_digit1, |v| {
+    convert_parser_data_error!(map(oct_digit1, |v| {
         ShellData::Int(i32::from_str_radix(v, 8).unwrap())
     })(input), vec![ShellType::Octal])
 }
 
 pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    let (rest, _) = convert_parser_error!(char('"')(input), vec![ShellType::String])?;
-    let (rest, (chars, _)) = convert_parser_error!(many_till(anychar, char('"'))(rest), vec![ShellType::String])?;
+    let (rest, _) = convert_parser_data_error!(char('"')(input), vec![ShellType::String])?;
+    let (rest, (chars, _)) = convert_parser_data_error!(many_till(anychar, char('"'))(rest), vec![ShellType::String])?;
     let string = chars.iter().fold(String::new(), |mut acc, c| {acc.push(*c); acc});
     Ok((rest, ShellData::String(string)))
 }

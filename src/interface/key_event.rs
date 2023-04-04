@@ -41,36 +41,28 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             modifiers: KeyModifiers::CONTROL,
             ..
         } => {
-            print_below_current(&format!("{:?}", complete_command("".to_string())), true);
-        },
-        KeyEvent {
-            code: KeyCode::Char('k'),
-            modifiers: KeyModifiers::CONTROL,
-            ..
-        } => {
-            info!("{}", buffer.get_context_and_after());
-            print_below_current(&format!("{:?}", buffer.get_context_and_after()), true);
+            side_effects = SideEffects::DisplayCommands;
         },
         KeyEvent {
             code: KeyCode::Char('d'),
             modifiers: KeyModifiers::CONTROL,
             ..
         } => {
-            print_below_current(format_description(&buffer.contents).as_str(), true)
+            side_effects = SideEffects::DisplayDescription;
         },
         KeyEvent {
             code: KeyCode::Char('o'),
             modifiers: KeyModifiers::CONTROL,
             ..
         } => {
-            print_below_current(format_options(&buffer.contents).as_str(), true)
+            side_effects = SideEffects::DisplayOptions;
         },
         KeyEvent {
             code: KeyCode::Char('a'),
             modifiers: KeyModifiers::CONTROL,
             ..
         } => {
-            print_below_current(format_arguments(&buffer.contents).as_str(), true)
+            side_effects = SideEffects::DisplayArguments;
         },
         KeyEvent {
             code: KeyCode::Left,
@@ -154,7 +146,6 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
         }
         KeyEvent { .. } => (),
     }
-
     //Return session back to engine
     (buffer, session, side_effects)
 }

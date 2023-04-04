@@ -32,7 +32,7 @@ impl<I: std::fmt::Debug> fmt::Display for ParserError<I> {
             ParserError::CommandError(c) => write!(f, "{}", c),
             ParserError::OptionError(o) => write!(f, "{}", o),
             ParserError::ArgumentError(a) => write!(f, "{}", a),
-            ParserError::DataError(ts) => write!(f, "Invalid data type, expected {:?}", ts),
+            ParserError::DataError(ts) => write!(f, "Invalid data type, expected type from {:?}", ts),
             ParserError::Incomplete => write!(f, "Incomplete parsing"),
             ParserError::Unknown(s) => write!(f, "An unknown error has occured: {}", s),
             nom => write!(f, "{:?}", nom),

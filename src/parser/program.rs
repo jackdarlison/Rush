@@ -1,5 +1,5 @@
 
-use nom::{IResult, branch::alt, combinator::map};
+use nom::{Err::*, IResult, branch::alt, combinator::map};
 
 use crate::architecture::ast::{AstStatement, AstProgram};
 
@@ -13,7 +13,9 @@ pub fn parse_statement(input: &str) -> IResult<&str, AstStatement, ParserError<&
    alt((
       map(parse_command, |c| {AstStatement::Command(c)} ),
       map(parse_control_flow, |cf| {AstStatement::ControlFlow(cf)} ),
-   ))(input)
+   ))(input).map_err(|_| {
+      Failure(ParserError::CommandError(format!("{} is not a valid keyword", input.split_whitespace().collect::<Vec<&str>>().first().unwrap_or(&""))))
+   })
 }
 
 #[cfg(test)]

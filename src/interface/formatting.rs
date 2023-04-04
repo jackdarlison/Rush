@@ -4,72 +4,94 @@ use crossterm::{terminal::{Clear, ClearType}, style::Color};
 use log::error;
 use nom::{sequence::pair, character::complete::{multispace0, space0}};
 
-use crate::{parser::commands::{parse_command, parse_valid_command, parse_options, parse_arguments}, architecture::{shell_result::ShellResult, shell_error::ShellError}, helpers::commands::{format_argument_names}};
+use crate::{parser::commands::{parse_command, parse_valid_command, parse_options, parse_arguments}, architecture::{shell_result::ShellResult, shell_error::ShellError, command::Command}, helpers::{commands::{format_argument_names}, parser::inner_nom_err}};
 
 pub fn format_hints(buffer: &String) -> (String, Color) {
     if let Ok((rest, (command, _))) = pair(parse_valid_command, space0)(buffer.as_str()) {
         match command {
             Ok(c) => {
-                let mut s_opts = String::new();
-                let mut s_req_args = String::new();
-                let mut s_list_arg = String::new();
-                if rest.len() == 0 {
-                    s_opts = format!("options.. ");
+                return command_hints(c, rest)
+            },
+            Err(_e) => {
+                return control_flow_hints(buffer);
+            },
+        }
+    }
+    (String::new(), Color::Red)
+}
+
+fn command_hints(c: Box<dyn Command>, rest: &str) -> (String, Color) {
+    let mut s_opts = String::new();
+    let mut s_req_args = String::new();
+    let mut s_list_arg = String::new();
+    if rest.len() == 0 {
+        if c.options().len() != 0 {
+            s_opts = format!("options.. ");
+        }
+        s_req_args = format_argument_names(&c);
+        if let Some(list_arg) = c.list_argument() {
+            s_list_arg = format!(" {}..", list_arg.name);
+        }
+    } else {
+        match parse_options(rest, c.clone()) {
+            Ok((o_rest, opts)) => {
+                if o_rest.len() == 0 || o_rest.split_whitespace().all(|s| s.starts_with("-")) {
                     s_req_args = format_argument_names(&c);
                     if let Some(list_arg) = c.list_argument() {
                         s_list_arg = format!(" {}..", list_arg.name);
                     }
                 } else {
-                    match parse_options(rest, c.clone()) {
-                        Ok((o_rest, opts)) => {
-                            match parse_arguments(o_rest, c.clone()) {
-                                Ok((a_rest, args)) => {
-                                    // if leftover from parsing then command is finished
-                                    if a_rest.len() != 0 {
-                                        return (String::new(), Color::Red)
-                                    }
-                                    // if no args present, display required arg names
-                                    if args.len() == 0  {
-                                        s_req_args = format_argument_names(&c);
-                                        // if no options present display options hint
-                                        if opts.len() == 0 {
-                                            s_opts.push_str("options.. ")
-                                        }
-                                    } 
-                                    //display list argument name if present
-                                    if let Some(list_arg) = c.list_argument() {
-                                        s_list_arg.push_str(list_arg.name);
-                                        s_list_arg.push_str("..");
-                                    }
-                                },
-                                Err(e) => {
-                                    if o_rest.len() == 0 {
-                                        return (String::new(), Color::Red)
-                                    }
-                                    return (format!("{}", e), Color::Red);
-                                },
+                    match parse_arguments(o_rest, c.clone()) {
+                        Ok((a_rest, args)) => {
+                            // if leftover from parsing then command is finished
+                            if a_rest.len() != 0 {
+                                return (String::new(), Color::Red)
+                            }
+                            // if no args present, display required arg names
+                            if args.len() == 0  {
+                                s_req_args = format_argument_names(&c);
+                                // if no options present display options hint
+                                if opts.len() == 0 && c.options().len() != 0 {
+                                    s_opts.push_str("options.. ")
+                                }
+                            } 
+                            //display list argument name if present
+                            if let Some(list_arg) = c.list_argument() {
+                                s_list_arg.push_str(list_arg.name);
+                                s_list_arg.push_str("..");
                             }
                         },
                         Err(e) => {
-                            if rest.len() == 0 {
-                                return (String::new(), Color::Red)
-                            }
-                            return (format!("{}", e), Color::Red)
-                        }
+                            return (format!("{}", inner_nom_err(e)), Color::Red);
+                        },
                     }
                 }
-                return (format!("{}{}{}", s_opts, s_req_args, s_list_arg), Color::Cyan)
             },
             Err(e) => {
-                if buffer.split_whitespace().collect::<Vec<&str>>().len() > 1 || buffer.ends_with(" ") {
-                    return (e, Color::Red)
-                } else {
-                    return (String::new(), Color::Red)
-                }
-            },
+                return (format!("{}", inner_nom_err(e)), Color::Red)
+            }
         }
     }
-    (String::new(), Color::Red)
+    return (format!("{}{}{}", s_opts, s_req_args, s_list_arg), Color::Cyan)
+}
+
+fn control_flow_hints(buffer: &String) -> (String, Color) {
+    for_hints(buffer)
+}
+
+fn for_hints(buffer: &String) -> (String, Color) {
+    let mut words = buffer.split_whitespace();
+    match words.next() {
+        Some(s) if s == "for" => return (String::from(" variable in range { .. }"), Color::Cyan),
+        Some(s) => {
+            if words.next() == Option::None && buffer.ends_with(" ") {
+                (format!("{} is not a known command", s), Color::Cyan)
+            } else {
+                (String::new(), Color::Red)
+            }
+        },
+        None => (String::new(), Color::Red),
+    }
 }
 
 pub fn format_description(buffer: &String) -> String {
