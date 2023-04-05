@@ -31,6 +31,11 @@ pub fn get_height_of_text(input: &str) -> u16 {
     height
 }
 
+pub fn clear() {
+    let (_, y) = cursor::position().unwrap();
+    scroll_off(y);
+}
+
 pub fn print_prompt(prompt: &str, colour: Color) {
     if cursor_to_bottom_distance() < 1 {
         scroll_off(1);

@@ -65,20 +65,23 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             side_effects = SideEffects::DisplayArguments;
         },
         KeyEvent {
+            code: KeyCode::Char('l'),
+            modifiers: KeyModifiers::CONTROL,
+            ..
+        } => {
+            side_effects = SideEffects::Clear;
+        }
+        KeyEvent {
             code: KeyCode::Left,
             .. 
         } => {
-            if buffer.move_left() {
-                execute!(stdout(), MoveLeft(1)).unwrap()
-            }
+            side_effects = SideEffects::MoveLeft;
         },
         KeyEvent { 
             code: KeyCode::Right,
             .. 
         } => {
-            if buffer.move_right() {
-                execute!(stdout(), MoveRight(1)).unwrap()
-            }
+            side_effects = SideEffects::MoveRight;
         }
         KeyEvent {
             code: KeyCode::Tab,
@@ -90,14 +93,7 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             code: KeyCode::Backspace,
             ..
         } => {
-            if let Some(_) = buffer.delete() {
-                execute!(
-                    stdout(),
-                    MoveLeft(1),
-                    Print(" "),
-                    MoveLeft(1),
-                ).unwrap();
-            }
+            side_effects = SideEffects::Delete;
         },
         KeyEvent { 
             code: KeyCode::Char(c),
@@ -105,14 +101,7 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             state: KeyEventState::NONE,
             ..
         } => {
-            buffer.insert(c);
-            execute!(
-                stdout(),
-                Print(c),
-                SavePosition,
-                Print(buffer.str_contents_after_index()),
-                RestorePosition,
-            ).unwrap();
+            side_effects = SideEffects::Char(c);
         },
         KeyEvent {
             code: KeyCode::Char(c),
@@ -120,14 +109,7 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             state: KeyEventState::NONE, 
             ..
         } => {
-            buffer.insert(c.to_ascii_uppercase());
-            execute!(
-                stdout(),
-                Print(c.to_ascii_uppercase()),
-                SavePosition,
-                Print(buffer.str_contents_after_index()),
-                RestorePosition,
-            ).unwrap();
+            side_effects = SideEffects::Char(c.to_ascii_uppercase());
         },
         KeyEvent {
             code: KeyCode::Char(c),
@@ -135,14 +117,7 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             state: KeyEventState::CAPS_LOCK,
             ..
         } => {
-            buffer.insert(c.to_ascii_uppercase());
-            execute!(
-                stdout(),
-                Print(c.to_ascii_uppercase()),
-                SavePosition,
-                Print(buffer.str_contents_after_index()),
-                RestorePosition,
-            ).unwrap();
+            side_effects = SideEffects::Char(c.to_ascii_uppercase());
         }
         KeyEvent { .. } => (),
     }
