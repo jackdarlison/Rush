@@ -1,10 +1,6 @@
-use std::{cmp, ops::Range};
+use std::ops::Range;
 
-use crossterm::cursor::MoveRight;
-
-use crate::helpers::completion::{keywords, seperators};
-
-use super::output::print_below_current;
+use crate::helpers::completion::keywords;
 
 #[derive(Debug)]
 pub struct CommandBuffer {

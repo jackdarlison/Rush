@@ -1,11 +1,11 @@
-use std::{io::stdout, cmp};
+use std::io::stdout;
 
-use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, PrintStyledContent, Color, Stylize, Colored, Colors}, event::{read, Event}, cursor::{self, MoveLeft, MoveRight, SavePosition, RestorePosition}};
+use crossterm::{terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, EnableLineWrap}, style::{Print, Color}, event::{read, Event}, cursor::{self, MoveLeft, MoveRight, SavePosition, RestorePosition}};
 use log::{error, info};
 
-use crate::{parser::{commands::parse_command, program::parse_program}, helpers::{completion::complete_command, parser::inner_nom_err}, interface::{execution::execute_program, formatting::format_shell_results}, architecture::shell_error::ShellError};
+use crate::{parser::program::parse_program, helpers::{completion::complete_command, parser::inner_nom_err}, interface::{execution::execute_program, formatting::format_shell_results}, architecture::shell_error::ShellError};
 
-use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current, refresh_buffer, print_prompt, clear}, formatting::{format_hints, format_shell_result, format_description, format_options, format_arguments}, command_buffer::CommandBuffer};
+use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current, refresh_buffer, print_prompt, clear}, formatting::{format_hints, format_description, format_options, format_arguments}, command_buffer::CommandBuffer};
 
 pub(crate) fn run() {
 

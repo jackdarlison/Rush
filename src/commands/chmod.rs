@@ -3,7 +3,7 @@ use std::{fs::set_permissions, path::PathBuf, os::unix::prelude::PermissionsExt}
 
 use log::{info, error};
 
-use crate::{architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData}, get_type};
+use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData}, get_type};
 
 
 #[derive(Debug, Clone)]

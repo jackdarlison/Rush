@@ -1,4 +1,4 @@
-use nom::{IResult, branch::alt, sequence::tuple, bytes::complete::tag, multi::fold_many0, character::complete::{multispace0, newline, crlf}};
+use nom::{IResult, branch::alt, sequence::tuple, bytes::complete::tag, multi::fold_many0, character::complete::multispace0};
 
 use crate::architecture::ast::AstCompound;
 
@@ -22,7 +22,7 @@ pub fn parse_compound(input: &str) -> IResult<&str, AstCompound, ParserError<&st
 
 #[cfg(test)]
 mod tests {
-    use std::{ops::Range};
+    use std::ops::Range;
 
     use crate::{architecture::{ast::{AstStatement, AstCommand, AstControlFlow}, shell_data::ShellData}, commands::{ls::Ls, pwd::Pwd, echo::Echo}};
 

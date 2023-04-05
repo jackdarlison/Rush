@@ -1,10 +1,8 @@
-use std::io::stdout;
+use crossterm::style::Color;
 
-use crossterm::{terminal::{Clear, ClearType}, style::Color};
-use log::error;
-use nom::{sequence::pair, character::complete::{multispace0, space0}};
+use nom::{sequence::pair, character::complete::space0};
 
-use crate::{parser::commands::{parse_command, parse_valid_command, parse_options, parse_arguments}, architecture::{shell_result::ShellResult, shell_error::ShellError, command::Command}, helpers::{commands::{format_argument_names}, parser::inner_nom_err}};
+use crate::{parser::commands::{parse_valid_command, parse_options, parse_arguments}, architecture::{shell_result::ShellResult, command::Command}, helpers::{commands::{format_argument_names}, parser::inner_nom_err}};
 
 pub fn format_hints(buffer: &String) -> (String, Color) {
     if let Ok((rest, (command, _))) = pair(parse_valid_command, space0)(buffer.as_str()) {

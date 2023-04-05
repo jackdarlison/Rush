@@ -1,7 +1,6 @@
 use std::{io::stdout, cmp::max};
 
-use crossterm::{terminal::{self, Clear, ClearType}, cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveRight, MoveLeft, MoveTo}, style::{PrintStyledContent, Stylize, Color, Print}};
-use log::info;
+use crossterm::{terminal::{self, Clear, ClearType}, cursor::{self, SavePosition, RestorePosition, MoveToNextLine, MoveLeft, MoveTo}, style::{PrintStyledContent, Stylize, Color, Print}};
 
 use super::command_buffer::CommandBuffer;
 

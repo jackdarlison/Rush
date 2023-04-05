@@ -1,9 +1,9 @@
 
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
 
 use home;
 
-use crate::architecture::{shell_data::ShellData, shell_result::ShellResult, shell_error::ShellError};
+use crate::architecture::{shell_result::ShellResult, shell_error::ShellError};
 
 //holds information for the specific user session
 #[derive(Debug, Clone)]

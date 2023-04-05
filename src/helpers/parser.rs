@@ -33,6 +33,6 @@ pub fn inner_nom_err<I>(err: Err<ParserError<I>>) -> ParserError<I>{
         Err::Error(e) => e,
         Err::Failure(e) => e,
         //Incomplete is never used in code
-        Err::Incomplete(e) => ParserError::Unknown(String::from("Incomplete Parsing")),
+        Err::Incomplete(_e) => ParserError::Unknown(String::from("Incomplete Parsing")),
     }
 }
