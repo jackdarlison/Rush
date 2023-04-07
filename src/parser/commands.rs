@@ -50,7 +50,11 @@ pub fn parse_options(input: &str, command: Box<dyn Command>) -> IResult<&str, Ve
             for so in short_options {
                 match option_lookup(command.clone(), so) {
                     Some(o) => {
-                        opts.push((String::from(o.name), None))
+                        if let None = o.data {
+                            opts.push((String::from(o.name), None))
+                        } else {
+                            return Err(Failure(ParserError::OptionError(format!("{} requires data of type {:?} and cannot be used as a compound option", o.name, o.data.unwrap()))));
+                        }
                     },
                     None => {
                         return Err(Failure(ParserError::OptionError(format!("{} is not a valid option for {}", so, command.name()))))
