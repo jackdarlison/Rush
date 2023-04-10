@@ -94,7 +94,9 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             state: KeyEventState::NONE,
             ..
         } => {
-            side_effects = SideEffects::Char(c);
+            if c.is_ascii() {
+                side_effects = SideEffects::Char(c);
+            }
         },
         KeyEvent {
             code: KeyCode::Char(c),
@@ -102,7 +104,9 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             state: KeyEventState::NONE, 
             ..
         } => {
-            side_effects = SideEffects::Char(c.to_ascii_uppercase());
+            if c.is_ascii() {
+                side_effects = SideEffects::Char(c.to_ascii_uppercase());
+            }
         },
         KeyEvent {
             code: KeyCode::Char(c),
@@ -110,7 +114,9 @@ pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: S
             state: KeyEventState::CAPS_LOCK,
             ..
         } => {
-            side_effects = SideEffects::Char(c.to_ascii_uppercase());
+            if c.is_ascii() {
+                side_effects = SideEffects::Char(c.to_ascii_uppercase());
+            }
         }
         KeyEvent { .. } => (),
     }
