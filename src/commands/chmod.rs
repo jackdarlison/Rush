@@ -17,7 +17,7 @@ impl Command for Chmod {
     }
 
     fn description(&self) -> &str {
-        "Change the permissions of a file"
+        "Change the permissions of a list of files via an octal triplet"
     }
 
     fn options(&self) -> Vec<crate::architecture::command::CommandOption> {
@@ -28,7 +28,7 @@ impl Command for Chmod {
         vec![
             CommandArgument {
                 name:"mode",
-                description:"Set the permissions via an absolute octal triplet, in order owner, group, others. Combine read (4), write (2), and execute (1) to get permission number",
+                description:"Set the permissions via an absolute octal triplet. Digits are in order owner, group, others, where combining additively read (4), write (2), and execute (1) gives the related permission number",
                 arg_type: vec![ShellType::Octal]
             }
         ]
