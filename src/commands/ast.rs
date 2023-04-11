@@ -1,21 +1,21 @@
 use std::{any::TypeId, path::PathBuf};
 use log::info;
 
-use crate::{get_type, architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData}, helpers::file_system::read_file_contents, parser::program::parse_program, interface::{execution::execute_program, formatting::format_shell_results}};
+use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_data::ShellData, shell_error::ShellError}, get_type, helpers::file_system::read_file_contents, parser::program::parse_program};
 
 
 #[derive(Debug, Clone)]
-pub struct Rush {}
+pub struct Ast {}
 
-impl Command for Rush {
+impl Command for Ast {
     get_type!();
 
     fn name(&self) -> &str {
-        "rush"
+        "ast"
     }
 
     fn description(&self) -> &str {
-        "Execute rush script files or strings"
+        "Print the abstract syntax tree of a given script file or string"
     }
 
     fn options(&self) -> Vec<crate::architecture::command::CommandOption> {
@@ -55,24 +55,12 @@ impl Command for Rush {
 
         info!("Parsing for execution: {}", script);
 
-        let parse_result = match parse_program(&script) {
+        match parse_program(&script) {
             Ok((rest, ast)) => {
                 info!("parse result: {:?} and remaining: {}", ast, rest);
-                ast
+                return Ok(crate::architecture::shell_result::ShellResult::Value(ShellData::String(format!("{:?}", ast))))
             },
             Err(e) => return Err(ShellError::CommandError(format!("Cannot parse command: {}", e))),
-        };
-
-        let results = match execute_program(parse_result, session) {
-            Ok(rs) => format_shell_results(rs),
-            Err(e) => return Err(ShellError::CommandError(format!("Cannot execute program: {}", e))),
-        };
-
-        info!("Rush command results: {:?}", results);
-
-        match results {
-            None => Ok(ShellResult::None),
-            Some(r) => Ok(ShellResult::Value(ShellData::String(r)))
         }
     }
 }

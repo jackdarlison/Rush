@@ -6,7 +6,7 @@ pub fn complete_command(command: String) -> Vec<&'static str> {
 pub fn keywords() -> Vec<&'static str> {
     vec![
         // Commands
-        "ls", "echo", "cd", "pwd", "mkdir", "chmod", "ln", "false", "true", "rush",
+        "ls", "echo", "cd", "pwd", "mkdir", "chmod", "ln", "false", "true", "rush", "ast",
         // Control flow
         "for",
     ]
