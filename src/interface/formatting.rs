@@ -137,9 +137,11 @@ pub fn format_arguments(buffer: &String) -> String {
         if c.req_arguments().len() != 0 {
             args.push_str("Required Arguments: \r\n");
         }
-        
+
+        let mut i = 1;
         args.push_str(&c.req_arguments().iter().fold(String::new(), |mut acc, arg| {
-            acc.push_str(format!("  {} - {}\r\n", arg.name, arg.description).as_str());
+            acc.push_str(format!("  {}. {} - {}\r\n", i,  arg.name, arg.description).as_str());
+            i += 1;
             acc
         }));
 
