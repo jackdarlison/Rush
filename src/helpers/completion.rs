@@ -1,15 +1,22 @@
+use crate::helpers::commands::commands;
 
-pub fn complete_command(command: String) -> Vec<&'static str> {
+
+pub fn complete_command(command: String) -> Vec<String> {
     keywords().into_iter().filter(|c| c.starts_with(command.as_str())).collect()
 }
 
-pub fn keywords() -> Vec<&'static str> {
-    vec![
-        // Commands
-        "ls", "echo", "cd", "pwd", "mkdir", "chmod", "ln", "false", "true", "rush", "ast",
+pub fn keywords() -> Vec<String> {
+    let command_names = commands().into_iter().map(|c| c.name().to_owned());
+    
+    let mut other_key_words = vec![
         // Control flow
-        "for",
-    ]
+        String::from("for"),
+    ];
+
+    other_key_words.extend(command_names);
+    other_key_words
+
+
 }
 
 pub fn seperators() -> Vec<&'static str> {

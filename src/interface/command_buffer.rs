@@ -121,14 +121,14 @@ impl CommandBuffer {
     pub fn get_context_and_after(&mut self) -> String {
         let keywords = keywords();
         let (current, _) = self.get_current_word();
-        if keywords.iter().any(|k| k == &&current) {
+        if keywords.iter().any(|k| *k == current) {
             return self.words_current_and_after()
         }
         let index = self.index;
         for _ in 0..self.index {
             self.index -= 1;
             let (current, _) = self.get_current_word();
-            if keywords.iter().any(|k| k == &&current) {
+            if keywords.iter().any(|k| *k == current) {
                 let to_return = self.words_current_and_after();
                 self.index = index;
                 return to_return
@@ -146,10 +146,10 @@ impl CommandBuffer {
     }
 
     //returns the amount needed to move right
-    pub fn replace_current_word(&mut self, new: &str) -> (usize, usize) {
+    pub fn replace_current_word(&mut self, new: &String) -> (usize, usize) {
         let range = self.get_current_word().1;
         self.index = range.0 + new.len();
-        self.contents.replace_range(Range {start: range.0, end: range.1}, new);
+        self.contents.replace_range(Range {start: range.0, end: range.1}, &new);
         (range.0, self.index)
     }
 

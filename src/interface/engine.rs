@@ -10,7 +10,7 @@ use super::{key_event::process_key_event, session::Session, output::{scroll_off,
 pub(crate) fn run() {
 
    let mut command_buffer = CommandBuffer::new();
-   let mut autocomplete_buffer: Vec<&str> = vec![];
+   let mut autocomplete_buffer: Vec<String> = vec![];
    let mut autocomplete_index: usize = 0;
    let mut session = Session::new();
 
@@ -113,10 +113,12 @@ pub(crate) fn run() {
                             autocomplete_buffer.extend(complete_command(word));
                         }
                         if !autocomplete_buffer.is_empty() {
-                            command_buffer.replace_current_word(autocomplete_buffer[autocomplete_index]);
-                            autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
-                            refresh_buffer(prompt.len().try_into().unwrap_or(0), &command_buffer);
-                            print_below_current(&format!("{:?}", autocomplete_buffer), true);
+                            if let Some(new_keyword) = autocomplete_buffer.get(autocomplete_index) {
+                                command_buffer.replace_current_word(new_keyword);
+                                autocomplete_index = (autocomplete_index + 1) % autocomplete_buffer.len();
+                                refresh_buffer(prompt.len().try_into().unwrap_or(0), &command_buffer);
+                                print_below_current(&format!("{:?}", autocomplete_buffer), true);
+                            }
                         } else {
                             print_below_current("No matching commands", true);
                         }
