@@ -1,4 +1,4 @@
-///! A collection of helper code used throughout other modules
+//! A collection of helper code used throughout other modules
 
 pub mod commands;
 pub mod completion;
