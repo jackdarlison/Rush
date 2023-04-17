@@ -1,4 +1,4 @@
-//! contains the structures and traits for the commands
+//! Contains the structures and traits for the commands
 
 pub mod ast;
 pub mod command;

@@ -1,3 +1,6 @@
+//! Contains the abstract syntax tree code
+
+
 use std::ops::Range;
 
 use super::{shell_data::ShellData, command::Command};
