@@ -5,6 +5,7 @@ use log::info;
 use crate::{architecture::{command::{Command, CommandArgument, CommandOption}, shell_type::ShellType, shell_error::ShellError, shell_result::ShellResult, shell_data::ShellData}, get_type};
 
 
+/// Creates a list of directories
 #[derive(Debug, Clone)]
 pub struct Mkdir {}
 

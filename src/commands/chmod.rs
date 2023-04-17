@@ -6,6 +6,7 @@ use log::{info, error};
 use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData}, get_type};
 
 
+/// Change the permissions of a list of files via an octal triplet
 #[derive(Debug, Clone)]
 pub struct Chmod {}
 

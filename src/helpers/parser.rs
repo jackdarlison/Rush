@@ -3,6 +3,7 @@ use nom::Err;
 use crate::parser::parser_error::ParserError;
 
 
+/// Converts a given error into a data error of a given type
 #[macro_export]
 macro_rules! convert_parser_data_error {
     ($self:expr, $data_type:expr) => {
@@ -28,6 +29,7 @@ macro_rules! convert_parser_data_error {
     };
 }
 
+/// Returns the inner error contained within a Nom `nom::Err` Enum
 pub fn inner_nom_err<I>(err: Err<ParserError<I>>) -> ParserError<I>{
     match err {
         Err::Error(e) => e,

@@ -5,10 +5,16 @@ use crate::architecture::ast::{AstStatement, AstProgram};
 
 use super::{commands::parse_command, parser_error::ParserError, control_flow::parse_control_flow, compound::parse_compound};
 
+/// Parses a valid program
+/// 
+/// Programs are the root node of the AST containing a compound command
 pub fn parse_program(input: &str) -> IResult<&str, AstProgram, ParserError<&str>> {
    map(parse_compound, |cc| AstProgram::Program(Box::new(cc)))(input)
 }
 
+/// Parses a valid statement
+/// 
+/// Statements are either control flow or commands
 pub fn parse_statement(input: &str) -> IResult<&str, AstStatement, ParserError<&str>> {
    alt((
       map(parse_command, |c| {AstStatement::Command(c)} ),

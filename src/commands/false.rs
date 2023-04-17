@@ -1,7 +1,7 @@
 use std::any::TypeId;
 use crate::{architecture::{command::Command, shell_error::ShellError}, get_type};
 
-
+///Returns an error
 #[derive(Debug, Clone)]
 pub struct False {}
 

@@ -5,6 +5,7 @@ use log::{info, error};
 use crate::architecture::{command::{Command, CommandOption, CommandArgument}, shell_type::ShellType, shell_error::ShellError, shell_result::ShellResult, shell_data::ShellData};
 use crate::get_type;
 
+/// Create hard (default) or symbolic links between files
 #[derive(Debug, Clone)]
 pub struct Ln {}
 

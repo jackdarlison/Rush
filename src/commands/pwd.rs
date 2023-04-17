@@ -1,6 +1,7 @@
 use crate::{architecture::{command::Command, shell_data::ShellData, shell_result::ShellResult, shell_error::ShellError}, interface::session::Session, get_type};
 use std::any::TypeId;
 
+/// Returns the present working directory
 #[derive(Debug, Clone)]
 pub struct Pwd {}
 

@@ -2,6 +2,7 @@ use crossterm::event::{KeyEvent, KeyModifiers, KeyEventState, KeyCode};
 
 use super::{session::Session, engine::SideEffects, command_buffer::CommandBuffer};
 
+/// Returns the [`SideEffects`] of a given key event
 pub fn process_key_event(ke: KeyEvent, mut buffer: CommandBuffer, mut session: Session) -> (CommandBuffer, Session, SideEffects) {
 
     let mut side_effects = SideEffects::None;

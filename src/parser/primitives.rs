@@ -16,6 +16,7 @@ use crate::{architecture::{shell_data::ShellData, shell_type::ShellType}, conver
 
 use super::parser_error::ParserError;
 
+/// Returns a parser for a given [`ShellType`]
 pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, ShellData, ParserError<&str>> {
     move |input| {
         match data_type {
@@ -30,6 +31,7 @@ pub fn parse_shell_data(data_type: ShellType) -> impl Fn(&str) -> IResult<&str, 
     }
 }
 
+/// Returns a parser for a list of [`ShellType`]s
 pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IResult<&str, ShellData, ParserError<&str>> {
     move |input| {
         for ty in data_types.clone() {
@@ -41,6 +43,9 @@ pub fn parse_shell_data_many(data_types: Vec<ShellType>) -> impl Fn(&str) -> IRe
     }
 }
 
+/// Parses a character that is valid within a filepath
+/// 
+/// 0-9, a-z, A-Z, /, -, _, ., ?, *, \[, \], !, \\ 
 pub fn file_path_character(input: &str) -> IResult<&str, &str, ParserError<&str>> {
     alt((
         alphanumeric1,
@@ -57,6 +62,7 @@ pub fn file_path_character(input: &str) -> IResult<&str, &str, ParserError<&str>
     ))(input)
 }
 
+/// Parses a valid file path, using [`file_path_character`]
 pub fn parse_file_path(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     let (rest, filepath) = convert_parser_data_error!(fold_many1(
         file_path_character,
@@ -70,25 +76,30 @@ pub fn parse_file_path(input: &str) -> IResult<&str, ShellData, ParserError<&str
     return Ok((rest, ShellData::FilePath(filepath)))
 }
 
+/// Parses an integer
 pub fn parse_int(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     convert_parser_data_error!(map(i32, |v| ShellData::Int(v))(input), vec![ShellType::Int])
 }
 
+/// Parses a float
 pub fn parse_float(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     convert_parser_data_error!(map(float, |v| ShellData::Float(v))(input), vec![ShellType::Float])
 }
 
+/// Parses either a float or an integer
 pub fn parse_number(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
-    //Decide if number is float or not
+    //TODO: Decide if number is float or not
     convert_parser_data_error!(parse_float(input), vec![ShellType::Float])
 }
 
+/// Parses an octal
 pub fn parse_octal(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     convert_parser_data_error!(map(oct_digit1, |v| {
         ShellData::Int(i32::from_str_radix(v, 8).unwrap())
     })(input), vec![ShellType::Octal])
 }
 
+/// Parses a string: any characters between two quotes
 pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> {
     let (rest, _) = convert_parser_data_error!(char('"')(input), vec![ShellType::String])?;
     let (rest, (chars, _)) = convert_parser_data_error!(many_till(anychar, char('"'))(rest), vec![ShellType::String])?;
@@ -96,6 +107,9 @@ pub fn parse_string(input: &str) -> IResult<&str, ShellData, ParserError<&str>> 
     Ok((rest, ShellData::String(string)))
 }
 
+/// Parses a range, inclusive below and either above
+/// 
+/// x..<y is exclusive above, x..=y is inclusive above
 pub fn parse_range(input: &str) -> IResult<&str, Range<i32>, ParserError<&str>> {
     let (rest, (s, _, inc, e)) = tuple((i32, tag(".."), alt((tag("<"), tag("="))), i32))(input)?;
     if inc == "=" {

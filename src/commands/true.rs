@@ -3,6 +3,7 @@ use std::any::TypeId;
 use crate::{architecture::{command::Command, shell_result::ShellResult}, get_type};
 
 
+/// Always returns an Ok result
 #[derive(Debug, Clone)]
 pub struct True {}
 

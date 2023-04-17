@@ -1,6 +1,7 @@
 use std::{fmt, ops::Range};
 
 
+/// Contains the different styles of structured data present in the shell 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShellData {
     FilePath(String),

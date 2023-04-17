@@ -4,6 +4,7 @@ use log::info;
 use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_data::ShellData, shell_error::ShellError}, get_type, helpers::file_system::read_file_contents, parser::program::parse_program};
 
 
+/// Print the abstract syntax tree of a given script file or string
 #[derive(Debug, Clone)]
 pub struct Ast {}
 

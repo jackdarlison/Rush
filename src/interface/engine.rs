@@ -5,8 +5,9 @@ use log::{error, info};
 
 use crate::{parser::program::parse_program, helpers::{completion::complete_command, parser::inner_nom_err}, interface::{execution::execute_program, formatting::format_shell_results}, architecture::shell_error::ShellError};
 
-use super::{key_event::process_key_event, session::Session, output::{scroll_off, cursor_to_bottom_distance, print_after_input, print_below_current, refresh_buffer, print_prompt, clear}, formatting::{format_hints, format_description, format_options, format_arguments}, command_buffer::CommandBuffer};
+use super::{key_event::process_key_event, session::Session, output::{print_after_input, print_below_current, refresh_buffer, print_prompt, clear}, formatting::{format_hints, format_description, format_options, format_arguments}, command_buffer::CommandBuffer};
 
+/// Runs the main loop of the interface
 pub(crate) fn run() {
 
    let mut command_buffer = CommandBuffer::new();
@@ -72,7 +73,6 @@ pub(crate) fn run() {
                         break 'command_loop
                     }
 
-                    if cursor_to_bottom_distance() < 2 { scroll_off(2) }
                     info!("Parsing for execution: {}", command_buffer.str_contents());
                     match parse_program(command_buffer.str_contents()) {
                         Ok((rest, parse_result)) => {
@@ -183,6 +183,7 @@ pub(crate) fn run() {
     disable_raw_mode().unwrap();
 }
 
+/// Contains the various side effects that may occur from user input
 pub enum SideEffects {
     BreakProgram,
     BreakCommand,

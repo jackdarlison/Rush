@@ -2,6 +2,7 @@
 use std::any::TypeId;
 use crate::{architecture::{command::*, shell_error::ShellError, shell_type::ShellType, shell_result::ShellResult, shell_data::ShellData}, interface::session::Session, get_type};
 
+/// Print arguments to standard out
 #[derive(Debug, Clone, PartialEq)]
 pub struct Echo {}
 

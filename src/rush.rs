@@ -1,3 +1,8 @@
+//! # Rush
+//! 
+//! `Rush` is an implementation of a Unix shell
+//! 
+
 use log::{info, LevelFilter};
 use log4rs::{append::file::FileAppender, encode::pattern::PatternEncoder, Config, config::{Appender, Root}};
 
@@ -8,12 +13,13 @@ extern crate crossterm;
 
 extern crate proc_macro;
 
-mod architecture;
-mod parser;
-mod commands;
-mod helpers;
-mod interface;
+pub mod architecture;
+pub mod parser;
+pub mod commands;
+pub mod helpers;
+pub mod interface;
 
+#[doc(hidden)]
 fn main() {
 
     let file = FileAppender::builder()

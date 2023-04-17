@@ -13,11 +13,15 @@ use crate::{architecture::{command::Command, ast::AstCommand, shell_data::ShellD
 
 use super::{primitives::{parse_shell_data, parse_shell_data_many}, parser_error::ParserError};
 
+/// Parses a valid command name
 pub fn parse_valid_command(input: &str) -> IResult<&str, Result<Box<dyn Command>, String>, ParserError<&str>> {
     let (rest, command) = alpha1(input)?;
     Ok((rest, command_lookup(command)))
 }
 
+/// Parses a full command statement
+/// 
+/// Follows the pattern: 
 pub fn parse_command(input: &str) -> IResult<&str, AstCommand, ParserError<&str>> {
     let (rest, (name, _)) = pair(parse_valid_command, space0)(input)?;
     match name {
@@ -35,10 +39,12 @@ pub fn parse_command(input: &str) -> IResult<&str, AstCommand, ParserError<&str>
     }
 }
 
+#[doc(hidden)]
 fn parse_options_helper(command: Box<dyn Command>) -> impl Fn(&str) ->IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
     move |input| {parse_options(input, command.clone())}
 }
 
+/// Parses the options segment for a given command 
 pub fn parse_options(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<(String, Option<ShellData>)>, ParserError<&str>> {
 
     //parse compound options
@@ -77,10 +83,12 @@ pub fn parse_options(input: &str, command: Box<dyn Command>) -> IResult<&str, Ve
 
 }
 
+#[doc(hidden)]
 fn parse_option_helper(command: Box<dyn Command>) -> impl FnMut(&str) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
     move |input| {parse_option(input, command.clone())}
 }
 
+/// Parses a single option with optional data
 pub fn parse_option(input: &str, command: Box<dyn Command>) -> IResult<&str, (String, Option<ShellData>), ParserError<&str>> {
 
     let (rest, (_, opt_name, _)) = tuple((alt((tag("--"), tag("-"))), alpha1, space0))(input)?;
@@ -102,10 +110,12 @@ pub fn parse_option(input: &str, command: Box<dyn Command>) -> IResult<&str, (St
     }
 }
 
+#[doc(hidden)]
 pub fn parse_arguments_helper(command: Box<dyn Command>) -> impl Fn(&str) ->IResult<&str, Vec<ShellData>, ParserError<&str>> {
     move |input| {parse_arguments(input, command.clone())}
 } 
 
+/// Parses the arguments segment of a command
 pub fn parse_arguments(input: &str, command: Box<dyn Command>) -> IResult<&str, Vec<ShellData>, ParserError<&str>> {
     let required = command.req_arguments();
     let list = command.list_argument();

@@ -3,7 +3,7 @@ use std::fmt;
 
 
 
-//Error type for the shell
+/// Contains the different styles of errors present within commands
 #[derive(Debug, Clone)]
 pub enum ShellError {
     InputError(String),

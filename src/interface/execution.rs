@@ -3,12 +3,14 @@ use crate::architecture::{ast::{AstProgram, AstCompound, AstStatement, AstContro
 use super::session::Session;
 
 
+/// Executes a given program
 pub fn execute_program(input: AstProgram, session: &mut Session) -> Result<Vec<ShellResult>, ShellError> {
     match input {
         AstProgram::Program(c) => execute_compound(c, session, &mut vec![])
     }
 }
 
+/// Executes a given compound expression
 pub fn execute_compound(input: Box<AstCompound>, session: &mut Session, results: &mut Vec<ShellResult>) -> Result<Vec<ShellResult>, ShellError> {
     match *input {
         AstCompound::And(compound, st) => {
@@ -42,6 +44,7 @@ pub fn execute_compound(input: Box<AstCompound>, session: &mut Session, results:
     Ok(results.to_vec())
 }
 
+/// Executes a given statement
 pub fn execute_statement(input: AstStatement, session: &mut Session, results: &mut Vec<ShellResult>) -> Result<Vec<ShellResult>, ShellError> {
     match input {
         AstStatement::Command(c) => {
@@ -60,6 +63,7 @@ pub fn execute_statement(input: AstStatement, session: &mut Session, results: &m
     Ok(results.to_vec())
 }
 
+/// Executes a given control flow statement
 pub fn execute_control_flow(input: AstControlFlow, session: &mut Session, results: &mut Vec<ShellResult>) -> Result<Vec<ShellResult>, ShellError> {
     match input {
         AstControlFlow::For { var, range, body } => {
@@ -80,6 +84,7 @@ pub fn execute_control_flow(input: AstControlFlow, session: &mut Session, result
     Ok(results.to_vec())
 }
 
+/// Executes a given command
 pub fn execute_command(input: AstCommand, session: &mut Session) -> Result<ShellResult, ShellError> {
     let res = input.command.run(session, input.options, input.arguments);
     session.set_last_result(res.clone());

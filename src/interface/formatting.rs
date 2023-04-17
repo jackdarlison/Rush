@@ -4,6 +4,7 @@ use nom::{sequence::pair, character::complete::space0};
 
 use crate::{parser::commands::{parse_valid_command, parse_options, parse_arguments}, architecture::{shell_result::ShellResult, command::Command}, helpers::{commands::{format_argument_names}, parser::inner_nom_err}};
 
+/// Returns the formatted hints and colour for a given input buffer
 pub fn format_hints(buffer: &String) -> (String, Color) {
     if let Ok((rest, (command, _))) = pair(parse_valid_command, space0)(buffer.as_str()) {
         match command {
@@ -18,6 +19,7 @@ pub fn format_hints(buffer: &String) -> (String, Color) {
     (String::new(), Color::Red)
 }
 
+/// Returns the formatted hints and colour for a given command
 fn command_hints(c: Box<dyn Command>, rest: &str) -> (String, Color) {
     let mut s_opts = String::new();
     let mut s_req_args = String::new();
@@ -73,10 +75,13 @@ fn command_hints(c: Box<dyn Command>, rest: &str) -> (String, Color) {
     return (format!("{}{}{}", s_opts, s_req_args, s_list_arg), Color::Cyan)
 }
 
+/// Returns the formatted hints and colour for the control flow statements
 fn control_flow_hints(buffer: &String) -> (String, Color) {
     for_hints(buffer)
+    //TODO: Handle other control flow statements once implemented
 }
 
+/// Returns the formatted hints and colour for a for statement
 fn for_hints(buffer: &String) -> (String, Color) {
     let mut words = buffer.split_whitespace();
     match words.next() {
@@ -92,6 +97,7 @@ fn for_hints(buffer: &String) -> (String, Color) {
     }
 }
 
+/// Returns the formatted command description for a given input buffer
 pub fn format_description(buffer: &String) -> String {
     if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         return String::from(c.description());
@@ -99,6 +105,7 @@ pub fn format_description(buffer: &String) -> String {
     String::new()
 }
 
+/// Returns the formatted command options for a given input buffer
 pub fn format_options(buffer: &String) -> String {
     if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         let options = c.options();
@@ -130,6 +137,7 @@ pub fn format_options(buffer: &String) -> String {
     String::new()
 }
 
+/// Returns the formatted command arguments for a given input buffer
 pub fn format_arguments(buffer: &String) -> String {
     if let Ok((_, Ok(c))) = parse_valid_command(&buffer) {
         let mut args = String::new();
@@ -162,7 +170,8 @@ pub fn format_arguments(buffer: &String) -> String {
     String::new()
 }
 
-    pub fn format_shell_results(results: Vec<ShellResult>) -> Option<String> {
+/// Returns the formatted shell results for a list of results
+pub fn format_shell_results(results: Vec<ShellResult>) -> Option<String> {
     if results.is_empty() { return None }
     let mut output = String::new();
     for r in results {
@@ -180,6 +189,7 @@ pub fn format_arguments(buffer: &String) -> String {
     Some(output)
 }
 
+/// Returns a formatted string for a single shell result
 pub fn format_shell_result(result: ShellResult) -> Option<String> {
     match result {
         ShellResult::None => None,

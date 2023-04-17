@@ -1,3 +1,5 @@
+//! Contains the individual parsers and related code
+
 pub mod program;
 pub mod commands;
 pub mod primitives;

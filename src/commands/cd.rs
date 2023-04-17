@@ -4,6 +4,7 @@ use log::info;
 
 use crate::{architecture::{command::{Command, CommandArgument}, shell_type::ShellType, shell_result::ShellResult, shell_error::ShellError, shell_data::ShellData}, interface::session::Session, helpers::file_system::name, get_type};
 
+/// Change directory the present working directory
 #[derive(Debug, Clone)]
 pub struct Cd {}
 
@@ -15,7 +16,7 @@ impl Command for Cd {
     }
 
     fn description(&self) -> &str {
-        "Change directory"
+        "Change directory the present working directory"
     }
 
     fn options(&self) -> Vec<crate::architecture::command::CommandOption> {

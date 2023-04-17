@@ -5,6 +5,7 @@ use nom::error::{ErrorKind, ParseError};
 use crate::architecture::shell_type::ShellType;
 
 
+/// Enumeration to give more context to Nom parser errors
 #[derive(Debug, PartialEq)]
 pub enum ParserError<I> {
     CommandError(String),

@@ -7,6 +7,7 @@ extern crate glob;
 use chrono::NaiveDateTime;
 use glob::{MatchOptions, glob_with};
 
+/// Print the contents of a list of directories
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Ls {}
 

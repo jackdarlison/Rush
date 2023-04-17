@@ -5,7 +5,7 @@ use home;
 
 use crate::architecture::{shell_result::ShellResult, shell_error::ShellError};
 
-//holds information for the specific user session
+/// Holds information for the specific user session
 #[derive(Debug, Clone)]
 pub struct Session {
     pub pwd: String,
@@ -14,6 +14,10 @@ pub struct Session {
 }
 
 impl Session {
+
+    /// Creates a new default session
+    /// 
+    /// Sets the pwd to OS home if possible otherwise root
     pub fn new() -> Session {
         Session {
             pwd: {
@@ -27,6 +31,7 @@ impl Session {
         }
     }
 
+    /// Sets the last result field to a given value
     pub fn set_last_result(&mut self, r: Result<ShellResult, ShellError>) {
         self.last_result = r;
     }

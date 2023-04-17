@@ -4,6 +4,9 @@ use crate::architecture::ast::AstCompound;
 
 use super::{parser_error::ParserError, program::parse_statement};
 
+/// Parses a valid compound expression
+/// 
+/// A compound expression is any number of statements seperated by "&&", "||", ";", "\n", "\r\n"
 pub fn parse_compound(input: &str) -> IResult<&str, AstCompound, ParserError<&str>> {
     let (rest, command) = parse_statement(input)?;
     fold_many0(tuple((alt((tag("&&"), tag("||"), tag(";"), tag("\n"), tag("\r\n"))), multispace0, parse_statement)),
